@@ -1,0 +1,188 @@
+   
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1, h2 ,h3 {
+      font-family: 'Cairo', sans-serif;
+      font-weight: 600;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .button {
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    .button-on { 
+      background: linear-gradient(145deg, #2ecc71, #27ae60);
+    }
+    
+    .button-off {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+    }
+
+    .button-pause { background-color: #f39c12; }
+    .button-disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+
+     .progress-container {
+      width: 100%;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    
+    .progress-bar {
+      height: 25px;
+      background: linear-gradient(90deg, #2ecc71, #3498db);
+      transition: width 0.5s ease;
+      position: relative;
+    }
+    
+    .progress-bar::after {
+      content: attr(data-progress);
+      position: absolute;
+      right: 10px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .state-active { color: #2ecc71; font-weight: bold; }
+    .state-inactive { color: #e74c3c; }
+    
+    @media (max-width: 600px) {
+      table { font-size: 14px; }
+      .button { padding: 8px 16px; }
+      .card { padding: 10px; }
+    }
+  
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background-color: #f8f9fa;
+    }
+
+   .collapsible-content.active {
+     max-height: 500px; /* أو أي قيمة تناسب محتواك */
+    }
+
+  .collapse-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+   }
+/* لتشغيل الفونت الجديد */
+/* arabic */
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+  
+  @font-face {
+    font-family: 'Cairo';
+    src: url('../fonts/Cairo-SemiBold.woff2') format('woff2');
+  } 
+
+.button {
+  position: relative; /* تأكد من أن الأزرار في المقدمة */
+  z-index: 1;
+  pointer-events: auto !important;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+}
+
+    .save-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+      .time-remaining {
+    background-color: #f8f9fa; /* لون الخلفية */
+    border-radius: 8px; /* زوايا مدورة */
+    padding: 12px 20px; /* مساحة داخلية */
+    margin: 15px 0; /* هامش خارجي */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
+    font-family: Arial, sans-serif; /* نوع الخط */
+    font-size: 18px; /* حجم الخط العام */
+    color: #2c3e50; /* لون النص */
+    display: inline-block; /* عرض مناسب للمحتوى */
+    border: 1px solid #e0e0e0; /* حد خفيف */
+  }
+
+  .time-remaining #remainingTime {
+    font-size: 24px; /* حجم الخط للرقم */
+    font-weight: bold; /* نص غامق */
+    color: #2ecc71; /* لون مميز للرقم */
+    margin: 0 5px; /* مسافة بين الرقم والنص */
+  }
+
+    .time-elapsed {
+    background-color: #f8f9fa; /* لون الخلفية */
+    border-radius: 8px; /* زوايا مدورة */
+    padding: 12px 20px; /* مساحة داخلية */
+    margin: 15px 0; /* هامش خارجي */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
+    font-family: Arial, sans-serif; /* نوع الخط */
+    font-size: 18px; /* حجم الخط العام */
+    color: #2c3e50; /* لون النص */
+    display: inline-block; /* عرض مناسب للمحتوى */
+    border: 1px solid #e0e0e0; /* حد خفيف */
+  }
+
+  .time-elapsed #elapsedTime {
+    font-size: 24px; /* حجم الخط للرقم */
+    font-weight: bold; /* نص غامق */
+    color: #2ecc71; /* لون مميز للرقم */
+    margin: 0 5px; /* مسافة بين الرقم والنص */
+  }
+
+  .timer {/*محتوى زمني للأزرار التبادلية اليدوية*/
+  font-size: 14px;
+  color: #e74c3c;
+  margin-right: 8px;
+  font-weight: bold;
+}
+  
