@@ -4,6 +4,7 @@
 #include <WebServer.h>     // لإنشاء خادم ويب
 #include <SPIFFS.h>        // نظام ملفات داخل الشريحة لتخزين الصفحات 
 // مكتبة رفع الملفات -SPIFFS.h- قديمة و تعمل على اردوينو 1.8.19
+#include <EEPROM.h>        // مكتبة EEPROM لحفظ الحالة بين الإقلاعات
 
 // =================== 🌐 إعدادات الشبكة ===================
 const char* AP_SSID = "ESP32-Control";       // اسم نقطة الوصول Access Point
@@ -24,6 +25,8 @@ const char* AP_PASSWORD = "12345678";        // كلمة المرور
 #define MANUAL_OUT9 32   // المخرج اليدوي 9
 #define MANUAL_OUT10 33  // المخرج اليدوي 10
 
+#define EEPROM_SIZE 64  // حجم EEPROM المستخدم
+
 // =================== 📦 هياكل البيانات ===================
 // هيكل لتخزين إعدادات Wi-Fi
 struct WiFiSettings {
@@ -35,13 +38,14 @@ struct WiFiSettings {
 struct GpioPin {
   int number;                     // رقم البن
   int state;                      // حالته (1 أو 0)
-  unsigned long activationTime;  // وقت التفعيل الأخير
-  unsigned long autoOffDuration; // مدة التشغيل التلقائي قبل الإيقاف
-  const char* name;              // اسم العرض
-  const char* onCmd;             // رابط التشغيل
-  const char* offCmd;            // رابط الإيقاف
-  bool allowManualControl;       // هل يمكن التحكم يدوياً
+  unsigned long activationTime;   // وقت التفعيل الأخير
+  unsigned long autoOffDuration;  // مدة التشغيل التلقائي قبل الإيقاف
+  char name[32];                  // اسم العرض (تم تغييره إلى char[] بدلاً من const char*)
+  const char* onCmd;              // رابط التشغيل
+  const char* offCmd;             // رابط الإيقاف
+  bool allowManualControl;        // هل يمكن التحكم يدوياً
 };
+
 
 // =================== 🌍 متغيرات عامة ===================
 WebServer server(80);      // خادم ويب على المنفذ 80
@@ -833,24 +837,87 @@ function toggleSettings() {
 String fullHtmlPage = htmlHeader + String(cssStyles) + String(htmlBody) + String(javascriptCode);
 
 // ============ Forward Declarations ============
-// ============ التصريح المسبق عن الدوال قيل دالة الإعداد setup()  ============
+// ============ التصريح المسبق عن الدوال قبل دالة الإعداد setup() ============
+
+// تُرجع حالة النظام الحالية على شكل JSON (عدد المخرجات، حالاتهم، الشبكة... إلخ)
 String getSystemStatusJSON();
+
+// تبديل حالة مخرج بناءً على رقم ترتيبه في المصفوفة pins[]
 void toggleOutput(int pinIndex);
+
+// تبديل جميع المخرجات التبادلية (تشغيل أو إيقاف جماعي)
 void toggleOutputs();
+
+// تبديل حالة مخرج معين بناءً على الرابط (path) المستدعى
+void toggleOutput(const char* path);
+
+// بدء تشغيل النظام التبادلي تلقائياً (مثل نمط متسلسل)
 void startToggleSystem();
+
+// إيقاف النظام التبادلي بالكامل
 void stopToggleSystem();
+
+// إيقاف مؤقت مؤقت للنظام التبادلي (pause فقط)
 void pauseToggleSystem();
+
+// استئناف التشغيل التبادلي بعد الإيقاف المؤقت
 void resumeToggleSystem();
+
+// حساب الوقت المتبقي لإيقاف تتابع تلقائي
 unsigned long calculateRemainingTime();
+
+// حساب نسبة التقدم في التتابع (كـ %)
 int calculateProgress();
+
+// محاولة الاتصال بشبكة WiFi باستخدام إعدادات مخزنة أو مبرمجة
 void connectToWiFi();
+
+// بدء نقطة وصول (Access Point) في حال فشل الاتصال بالواي فاي
 void startAPMode();
+
+// تهيئة خادم الويب ومسارات الطلبات
 void setupServer();
+
+// توليد صفحة إعدادات شبكة WiFi أو الإعدادات العامة (HTML)
 void handleConfigPage();
+
+// حفظ إعدادات المستخدم المرسلة من صفحة الإعدادات (مثل WiFi أو مؤقت)
 void handleSaveConfig();
+
+// عرض الصفحة الرئيسية التي تحتوي على أزرار التحكم بالمخارج
+void handleRoot();
+
+// حفظ حالة جميع المخارج إلى EEPROM
+void savePinStatesToEEPROM();
+
+// تهيئة المخارج وإعادة تحميل حالتها من EEPROM
+void setupPins();
+
+// توليد صفحة إعدادات تخصيص أسماء المخارج ومؤقتاتها
+void handleSettings();
+
+// حفظ إعدادات الأسماء والمؤقتات من صفحة الإعدادات
+void handleSaveSettings();
+
+// حفظ إعدادات الاتصال بالشبكة WiFi إلى EEPROM
+void saveWiFiConfig();
 
 void setup() {
   Serial.begin(115200);
+  EEPROM.begin(EEPROM_SIZE);
+  setupPins();
+  WiFi.softAP(AP_SSID, AP_PASSWORD);
+  SPIFFS.begin();
+
+  server.on("/", handleRoot);
+  server.on("/settings", handleSettings);
+  server.on("/saveSettings", HTTP_POST, handleSaveSettings);
+
+  for (const GpioPin& pin : pins) {
+    server.on(pin.onCmd, [pin]() mutable { toggleOutput(pin.onCmd); });
+    server.on(pin.offCmd, [pin]() mutable { toggleOutput(pin.offCmd); });
+  }
+
   
   // تهيئة المنافذ
   for (auto& pin : pins) {
@@ -1238,12 +1305,22 @@ server.on("/", HTTP_GET, []() {
     server.send(200, "application/json", getSystemStatusJSON());
   });
                server.sendHeader("Cache-Control", "max-age=604800"); // 7 أيام
-  server.begin();
+   server.begin();
+  Serial.println("HTTP server started");
 }
 
 // =================== 🔁 حلقة التنفيذ  الحلقة الرئيسية ===================
 void loop() {
   server.handleClient();
+
+   unsigned long now = millis();
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    if (pins[i].autoOffDuration > 0 && pins[i].state == 1 && now - pins[i].activationTime >= pins[i].autoOffDuration) {
+      digitalWrite(pins[i].number, LOW);
+      pins[i].state = 0;
+      savePinStatesToEEPROM();
+    }
+  }
 
  // إعادة الاتصال التلقائي إذا فُقد الاتصال
   if (isConnected && WiFi.status() != WL_CONNECTED) {
@@ -1269,6 +1346,15 @@ void loop() {
         }
       }
     }
+      // تحقق من الإيقاف التلقائي إن وُجد
+  unsigned long now = millis();
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    if (pins[i].autoOffDuration > 0 && pins[i].state == 1 && now - pins[i].activationTime >= pins[i].autoOffDuration) {
+      digitalWrite(pins[i].number, LOW);
+      pins[i].state = 0;
+      savePinStatesToEEPROM();
+    }
+  }
   }
 
 
@@ -1283,6 +1369,98 @@ void loop() {
     }
   }
 }
+
+// =================== 🛠️  دوال مساعدة جديدة ===================
+void setupPins() {
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    pinMode(pins[i].number, OUTPUT);
+    pins[i].state = EEPROM.read(i);
+    EEPROM.get(20 + i * sizeof(unsigned long), pins[i].autoOffDuration);
+    EEPROM.get(100 + i * 32, pins[i].name);
+    digitalWrite(pins[i].number, pins[i].state);
+  }
+}
+
+void handleRoot() {
+  String html = "<html><head><meta charset='UTF-8'><title>ESP32 Web Control</title></head><body><h2>تحكم في المخارج</h2>";
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    html += pins[i].name;
+    html += " - الحالة: ";
+    html += (pins[i].state ? "تشغيل" : "إيقاف");
+    if (pins[i].allowManualControl) {
+      html += " <a href='" + String(pins[i].onCmd) + "'>تشغيل</a> | ";
+      html += "<a href='" + String(pins[i].offCmd) + "'>إيقاف</a><br>";
+    } else {
+      html += "<br>";
+    }
+  }
+  html += "<br><a href='/settings'>إعدادات المخارج</a>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+
+void savePinStatesToEEPROM() {
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    EEPROM.write(i, pins[i].state);
+    EEPROM.put(20 + i * sizeof(unsigned long), pins[i].autoOffDuration);
+    EEPROM.put(100 + i * 32, pins[i].name);
+  }
+  EEPROM.commit();
+}
+
+void toggleOutput(const char* path) {
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    if (strcmp(path, pins[i].onCmd) == 0) {
+      digitalWrite(pins[i].number, HIGH);
+      pins[i].state = 1;
+      pins[i].activationTime = millis();
+    }
+    else if (strcmp(path, pins[i].offCmd) == 0) {
+      digitalWrite(pins[i].number, LOW);
+      pins[i].state = 0;
+    }
+  }
+  savePinStatesToEEPROM();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+ 
+
+void handleSettings() {
+  String html = "<html><head><meta charset='UTF-8'><title>الإعدادات</title></head><body><h2>إعدادات المخارج</h2><form method='POST' action='/saveSettings'>";
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    html += "<label>" + String(pins[i].name) + ": </label>";
+    html += "اسم: <input name='name" + String(i) + "' value='" + String(pins[i].name) + "'> ";
+    html += "مؤقت الإيقاف (ms): <input name='timer" + String(i) + "' value='" + String(pins[i].autoOffDuration) + "'><br>";
+  }
+  html += "<input type='submit' value='حفظ'></form><br><a href='/'>رجوع</a></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleSaveSettings() {
+  for (int i = 0; i < sizeof(pins)/sizeof(pins[0]); i++) {
+    String nameArg = "name" + String(i);
+    String timerArg = "timer" + String(i);
+
+    if (server.hasArg(nameArg)) {
+      // تحويل النص إلى مصفوفة char
+      String pinName = server.arg(nameArg);  // الحصول على النص
+      pinName.toCharArray(pins[i].name, sizeof(pins[i].name));  // نسخ النص إلى pins[i].name
+    }
+    if (server.hasArg(timerArg)) {
+      pins[i].autoOffDuration = server.arg(timerArg).toInt();
+    }
+  }
+  savePinStatesToEEPROM();
+  server.sendHeader("Location", "/settings");
+  server.send(303);
+}
+
+
+
+ //=================== 🛠️ نهاية دوال مساعدة جديدة ===================
+
 
 void saveWiFiConfig() {
   File file = SPIFFS.open(WIFI_CONFIG_FILE, "w");
