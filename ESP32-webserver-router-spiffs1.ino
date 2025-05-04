@@ -146,6 +146,27 @@ const char* configPageHTML = R"rawliteral(
       background: #2ecc71;
       color: white;
     }
+
+    .danger-zone {
+  border: 2px solid #ff6b6b;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+.danger-zone h3 {
+  color: #ff6b6b;
+  margin-top: 0;
+}
+
+.button-danger.restore {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+  margin-right: 10px;
+}
+
+.button-danger.delete {
+  background: linear-gradient(145deg, #ff6b6b, #e55039);
+}
   </style>
 </head>
 <body>
@@ -162,9 +183,52 @@ const char* configPageHTML = R"rawliteral(
         <input type="password" id="password" name="password" required>
       </div>
       <button type="submit">حفظ الإعدادات</button>
+
     </form>
   </div>
+  <div class="danger-zone">
+  <h3>⚠️ منطقة الخطر:</h3>
+  
+  <button 
+    onclick="resetConfig('default')" 
+    class="button button-danger restore"
+    title="استعادة الإعدادات الأولية للشبكة"
+  >
+    <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
+  </button>
+  
+  <button 
+    onclick="resetConfig('delete')" 
+    class="button button-danger delete"
+    title="حذف جميع الإعدادات الحالية"
+  >
+    <i class="fas fa-trash-alt"></i> حذف الإعدادات
+  </button>
+</div>
   <script>
+function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
+  const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
+  
+  if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
+    return;
+  }
+
+  const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
+  
+  fetch(endpoint, { method: 'POST' })
+    .then(response => {
+      if (response.ok) {
+        alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
+        setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
+      } else {
+        alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
+      }
+    })
+    .catch(error => {
+      alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+    });
+}
+
     function validateForm(e) {
       e.preventDefault();
       const ssid = document.getElementById('ssid').value;
@@ -997,6 +1061,13 @@ void handleSaveConfig();
 void setup() {
   Serial.begin(115200);
 
+  server.on("/resetConfig", HTTP_POST, []() {  // ----   مسار لتنفيذ عملية إعادة التعيين لإعدادات الشبكة عبر الواجهة
+  resetWiFiConfig();
+  server.send(200, "text/plain", "تم إعادة تعيين الإعدادات!");
+  delay(1000);
+  ESP.restart(); // إعادة التشغيل لتفعيل التغييرات
+});
+
   server.on("/debug", HTTP_GET, []() {  // إضافة مسار جديد في الخادم (مثل /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
   if (server.hasArg("msg")) {
     String message = server.arg("msg");
@@ -1429,6 +1500,27 @@ void loop() {
     } else if (currentTime - lastToggleTime >= toggleInterval) {
       lastToggleTime = currentTime;
       toggleOutputs();
+    }
+  }
+}
+
+void resetWiFiConfig(bool restoreDefaults) { //  --- دالة لحذف أو استعادة الإعدادات الافتراضية للشبكة ----
+  if (restoreDefaults) {
+    // استعادة الإعدادات الافتراضية
+    WiFiSettings defaultSettings;
+    strncpy(defaultSettings.ssid, "الاسم_الافتراضي", sizeof(defaultSettings.ssid));
+    strncpy(defaultSettings.password, "كلمة_المرور_الافتراضية", sizeof(defaultSettings.password));
+    File file = SPIFFS.open(WIFI_CONFIG_FILE, "w");
+    file.write((uint8_t*)&defaultSettings, sizeof(defaultSettings));
+    file.close();
+    Serial.println("تم استعادة الإعدادات الافتراضية!");
+  } else {
+    // حذف الملف
+    if (SPIFFS.exists(WIFI_CONFIG_FILE)) {
+      SPIFFS.remove(WIFI_CONFIG_FILE);
+      Serial.println("تم حذف ملف الإعدادات!");
+    } else {
+      Serial.println("الملف غير موجود!");
     }
   }
 }
