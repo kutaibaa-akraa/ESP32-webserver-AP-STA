@@ -186,88 +186,85 @@ const char* configPageHTML = R"rawliteral(
 
     </form>
   </div>
-
   <div class="danger-zone">
-    <h3>⚠️ منطقة الخطر:</h3>
-    
-    <button 
-      onclick="resetConfig('default')" 
-      class="button button-danger restore"
-      title="استعادة الإعدادات الأولية للشبكة"
-    >
-      <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
-    </button>
-    
-    <button 
-      onclick="resetConfig('delete')" 
-      class="button button-danger delete"
-      title="حذف جميع الإعدادات الحالية"
-    >
-      <i class="fas fa-trash-alt"></i> حذف الإعدادات
-    </button>
-  </div>
-
+  <h3>⚠️ منطقة الخطر:</h3>
+  
+  <button 
+    onclick="resetConfig('default')" 
+    class="button button-danger restore"
+    title="استعادة الإعدادات الأولية للشبكة"
+  >
+    <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
+  </button>
+  
+  <button 
+    onclick="resetConfig('delete')" 
+    class="button button-danger delete"
+    title="حذف جميع الإعدادات الحالية"
+  >
+    <i class="fas fa-trash-alt"></i> حذف الإعدادات
+  </button>
+</div>
   <script>
-  function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
-    const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
-    
-    if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
-      return;
-    }
-
-    const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
-    
-    fetch(endpoint, { method: 'POST' })
-      .then(response => {
-        if (response.ok) {
-          alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
-          setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
-        } else {
-          alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
-        }
-      })
-      .catch(error => {
-        alert("❌ حدث خطأ في الاتصال بالسيرفر!");
-      });
+function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
+  const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
+  
+  if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
+    return;
   }
 
-      function validateForm(e) {
-        e.preventDefault();
-        const ssid = document.getElementById('ssid').value;
-        const password = document.getElementById('password').value;
-        const alertDiv = document.getElementById('alert');
+  const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
+  
+  fetch(endpoint, { method: 'POST' })
+    .then(response => {
+      if (response.ok) {
+        alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
+        setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
+      } else {
+        alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
+      }
+    })
+    .catch(error => {
+      alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+    });
+}
 
-        if (ssid.length < 2 || password.length < 8) {
-          alertDiv.style.display = 'block';
-          alertDiv.className = 'alert alert-error';
-          alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
-          return false;
-        }
+    function validateForm(e) {
+      e.preventDefault();
+      const ssid = document.getElementById('ssid').value;
+      const password = document.getElementById('password').value;
+      const alertDiv = document.getElementById('alert');
 
-        submitForm();
+      if (ssid.length < 2 || password.length < 8) {
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-error';
+        alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
         return false;
       }
 
-      function submitForm() {
-        const formData = new FormData(document.getElementById('wifiForm'));
-        fetch('/saveConfig', {
-          method: 'POST',
-          body: new URLSearchParams(formData)
-        })
-        .then(response => response.text())
-        .then(data => {
-          const alertDiv = document.getElementById('alert');
-          alertDiv.style.display = 'block';
-          alertDiv.className = 'alert alert-success';
-          alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
-          setTimeout(() => { window.location.href = '/'; }, 3000);
-        });
-      }
-  </script>
+      submitForm();
+      return false;
+    }
 
- </body>
- </html>
- )rawliteral";
+    function submitForm() {
+      const formData = new FormData(document.getElementById('wifiForm'));
+      fetch('/saveConfig', {
+        method: 'POST',
+        body: new URLSearchParams(formData)
+      })
+      .then(response => response.text())
+      .then(data => {
+        const alertDiv = document.getElementById('alert');
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-success';
+        alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
+        setTimeout(() => { window.location.href = '/'; }, 3000);
+      });
+    }
+  </script>
+</body>
+</html>
+)rawliteral";
 
 // متغيرات النظام
 bool toggleSystemActive = false;
@@ -308,7 +305,7 @@ const char* htmlHeader = R"rawliteral(
   <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
   
-  <link rel="stylesheet" href="/css/all.min.css?version=1.1"> <!-- Font Awesome --> 
+  <link rel="stylesheet" href="../css/all.min.css?version=1.1"> <!-- Font Awesome --> 
   <!-- link rel="stylesheet" href="../css/cairo.css" -->
   <!-- link rel="stylesheet" href="../css/tajawal.css" -->
   <style>
@@ -1028,7 +1025,7 @@ function toggleSettings() {
 
 function forceReload() { // ----- خاص بزر إعادة التحديث لممنع التخزين الكاش --------
   // إرسال طلب إلى السيرفر لطباعة الرسالة
-  fetch(`/debug?msg=forceReloadCalled_${new Date().getTime()}`)
+  fetch(`/debug?msg=forceReloadCalled_${new Date().getTime()}`);
     .then(() => {
       // إعادة التوجيه بعد إرسال الطلب
       const randomParam = `?nocache=${Math.random().toString(36).substr(2, 9)}`;
@@ -1328,9 +1325,10 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
   Serial.print("عنوان IP: ");
   Serial.println(WiFi.softAPIP());
 
-  server.on("/", HTTP_GET, []() {
-    if (isConnected) {
-      String html = fullHtmlPage;
+ // تكوين مسارات الخادم التعديل الجديد
+server.on("/", HTTP_GET, []() {
+    String html = fullHtmlPage; // <-- تم تصحيح المتغير هنا
+
     // استبدال العناوين
     html.replace("%SYSTEM_TITLE%", systemTitle);
     html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
@@ -1346,18 +1344,9 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
     for (int i = 0; i < 10; i++) {
         html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
     }
-      //  إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش
-      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.sendHeader("Pragma", "no-cache"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.sendHeader("Expires", "-1"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.send(200, "text/html", html); // إرسال الصفحة بعد الاستبدال
-     } else {
-      handleConfigPage();
-    }
-  });
-  
-  server.on("/saveConfig", HTTP_POST, handleSaveConfig);
-  server.begin();
+        server.send(200, "text/html", html);
+
+});
 
   server.on("/status", HTTP_GET, []() {
     String json = getSystemStatusJSON();
@@ -1614,7 +1603,30 @@ void handleSaveConfig() { // ---------- حفظ إعدادات الشبكة ال�
 // ------ إعداد الخادم ------
 void setupServer() {
 
-
+  server.on("/", HTTP_GET, []() {
+    if (isConnected) {
+      String html = fullHtmlPage;
+      // استبدال جميع العناصر النائبة أولاً
+      html.replace("%SYSTEM_TITLE%", systemTitle);
+      html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
+      html.replace("%resetBtn%", resetBtn);
+      html.replace("%toggleBtnStart%", toggleBtnStart);
+      html.replace("%toggleBtnStop%", toggleBtnStop);
+      html.replace("%TOGGLE_OUTPUT_1%", toggleOutputNames[0]);
+      html.replace("%TOGGLE_OUTPUT_2%", toggleOutputNames[1]);
+      for (int i = 0; i < 10; i++) {
+        html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
+      }
+      //  إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش
+      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Pragma", "no-cache"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Expires", "-1"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.send(200, "text/html", html); // إرسال الصفحة بعد الاستبدال
+    } else {
+      handleConfigPage();
+    }
+  });
+  
   server.on("/saveConfig", HTTP_POST, handleSaveConfig);
   server.begin();
 }
