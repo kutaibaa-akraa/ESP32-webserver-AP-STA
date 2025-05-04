@@ -79,6 +79,129 @@ const char* manualOutputs[] = {
   "المخرج اليدوي 9", "المخرج اليدوي 10"
 };
 
+//  ------ تحسين واجهة إعدادات الشبكة  
+const char* configPageHTML = R"rawliteral(
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات الشبكة</title>
+  <style>
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-success {
+      background: #2ecc71;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚙️ إعدادات اتصال Wi-Fi</h1>
+    <div id="alert" class="alert"></div>
+    <form id="wifiForm" onsubmit="return validateForm(event)">
+      <div class="form-group">
+        <label for="ssid">اسم الشبكة (SSID)</label>
+        <input type="text" id="ssid" name="ssid" required>
+      </div>
+      <div class="form-group">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit">حفظ الإعدادات</button>
+    </form>
+  </div>
+  <script>
+    function validateForm(e) {
+      e.preventDefault();
+      const ssid = document.getElementById('ssid').value;
+      const password = document.getElementById('password').value;
+      const alertDiv = document.getElementById('alert');
+
+      if (ssid.length < 2 || password.length < 8) {
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-error';
+        alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
+        return false;
+      }
+
+      submitForm();
+      return false;
+    }
+
+    function submitForm() {
+      const formData = new FormData(document.getElementById('wifiForm'));
+      fetch('/saveConfig', {
+        method: 'POST',
+        body: new URLSearchParams(formData)
+      })
+      .then(response => response.text())
+      .then(data => {
+        const alertDiv = document.getElementById('alert');
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-success';
+        alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
+        setTimeout(() => { window.location.href = '/'; }, 3000);
+      });
+    }
+  </script>
+</body>
+</html>
+)rawliteral";
+
 // متغيرات النظام
 bool toggleSystemActive = false;
 bool toggleSystemPaused = false;
@@ -344,10 +467,7 @@ const char* htmlBody = R"rawliteral(
         <button id="toggleBtn" class="button"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
         <button id="pauseBtn" class="button button-pause"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
       </div>
-    
-    </div>
-    
- <div class="collapsible-section">
+     <div class="collapsible-section">
   <button class="collapse-btn" onclick="toggleSettings()">
     <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
   </button>
@@ -384,7 +504,10 @@ const char* htmlBody = R"rawliteral(
     </div>
   </div>
 </div>
-</div>  
+    </div>
+  </div>
+
+  
   <div class="card">
     <h3><i class="fas fa-exchange-alt"></i> المخارج التبادلية</h3>
      <!-- جدول المخارج التبادلية -->
@@ -1317,45 +1440,27 @@ void startAPMode() {
 
 // ------ واجهة تكوين الشبكة ------
 void handleConfigPage() {
-  String html = R"(
-    <html dir="rtl">
-    <head>
-      <title>تكوين الشبكة</title>
-      <meta charset="UTF-8">
-    </head>
-    <body>
-      <h1>إعدادات الشبكة</h1>
-      <form action="/saveConfig" method="POST">
-        SSID: <input type="text" name="ssid"><br>
-        كلمة المرور: <input type="password" name="password"><br>
-        <input type="submit" value="حفظ">
-      </form>
-    </body>
-    </html>
-  )";
-  
-  server.send(200, "text/html", html);
+  server.send(200, "text/html", configPageHTML);
 }
 
-void handleSaveConfig() {
-  strncpy(wifiSettings.ssid, server.arg("ssid").c_str(), sizeof(wifiSettings.ssid));
-  strncpy(wifiSettings.password, server.arg("password").c_str(), sizeof(wifiSettings.password));
-  saveWiFiConfig();
-  
-  String response = R"(
-    <html dir="rtl">
-    <head>
-      <meta charset="UTF-8">
-      <meta http-equiv="refresh" content="3;url=/">
-    </head>
-    <body>
-      <h1>تم حفظ الإعدادات! جارِ إعادة التوجيه...</h1>
-    </body>
-    </html>
-  )";
-  
-  server.send(200, "text/html", response);
-  delay(4000);
+void handleSaveConfig() { // ---------- حفظ إعدادات الشبكة الجديدة و إعادة التشغيل بدون تجميد الخادم -------
+  if (server.hasArg("ssid") && server.hasArg("password")) {
+    // تحديث إعدادات Wi-Fi
+    strncpy(wifiSettings.ssid, server.arg("ssid").c_str(), sizeof(wifiSettings.ssid));
+    strncpy(wifiSettings.password, server.arg("password").c_str(), sizeof(wifiSettings.password));
+    saveWiFiConfig(); // حفظ الإعدادات في SPIFFS
+  }
+
+  // إرسال رد مع إعادة توجيه عبر JavaScript
+  server.send(200, "text/html", 
+    "<script>"
+    "setTimeout(() => { window.location.href = '/'; }, 3000);" // إعادة التوجيه بعد 3 ثوانٍ
+    "</script>"
+    "✓ تم حفظ الإعدادات، جارِ إعادة التشغيل..."
+  );
+
+  // إعادة التشغيل بعد تأخير قصير (بدون تجميد الخادم)
+  delay(100); 
   ESP.restart();
 }
 
@@ -1376,7 +1481,11 @@ void setupServer() {
       for (int i = 0; i < 10; i++) {
         html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
       }
-      server.send(200, "text/html", html); // إرسال بعد الاستبدال
+      //  إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش
+      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Pragma", "no-cache"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Expires", "-1"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.send(200, "text/html", html); // إرسال الصفحة بعد الاستبدال
     } else {
       handleConfigPage();
     }
