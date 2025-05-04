@@ -118,7 +118,6 @@ const char* htmlHeader = R"rawliteral(
   <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
   
-   <!-- للفونت المحلي مع ستايل -->
   <link rel="stylesheet" href="../css/all.min.css"> <!-- Font Awesome --> 
   <!-- link rel="stylesheet" href="../css/cairo.css" -->
   <!-- link rel="stylesheet" href="../css/tajawal.css" -->
@@ -881,7 +880,7 @@ void setup() {
 // CSS
   server.on("/css/all.min.css", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "max-age=604800");
-    File file = SPIFFS.open("/css/all.min.css", "r");
+        File file = SPIFFS.open("/css/all.min.css", "r");
     server.streamFile(file, "text/css");
     file.close();
   });
@@ -1091,7 +1090,7 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
  // تكوين مسارات الخادم التعديل الجديد
 server.on("/", HTTP_GET, []() {
     String html = fullHtmlPage; // <-- تم تصحيح المتغير هنا
-    server.send(200, "text/html", html);
+
     // استبدال العناوين
     html.replace("%SYSTEM_TITLE%", systemTitle);
     html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
@@ -1107,6 +1106,7 @@ server.on("/", HTTP_GET, []() {
     for (int i = 0; i < 10; i++) {
         html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
     }
+        server.send(200, "text/html", html);
 
 });
 
@@ -1289,20 +1289,20 @@ void connectToWiFi() {
   WiFi.begin(wifiSettings.ssid, wifiSettings.password);
   
   Serial.print("جاري الاتصال بشبكة WiFi...");
-  for (int i = 0; i < 20; i++) {
-    if (WiFi.status() == WL_CONNECTED) {
+  for (int i = 0; i < 20; i++) { // 20 محاولة (10 ثوانٍ)
+    if (WiFi.status() == WL_CONNECTED) { 
       isConnected = true;
       Serial.println("\nتم الاتصال!");
       Serial.print("عنوان IP: ");
       Serial.println(WiFi.localIP());
-      return;
+      return; // الخروج من الدالة بعد الاتصال
     }
     delay(500);
     Serial.print(".");
   }
   
   Serial.println("\nفشل الاتصال، التبديل إلى وضع AP");
-  startAPMode();
+  startAPMode(); // التبديل إلى نقطة الوصول
 }
 
 void startAPMode() {
@@ -1361,25 +1361,23 @@ void handleSaveConfig() {
 
 // ------ إعداد الخادم ------
 void setupServer() {
-  server.on("/", []() {
+
+  server.on("/", HTTP_GET, []() {
     if (isConnected) {
-      // تحميل صفحة التحكم الكاملة
       String html = fullHtmlPage;
-//      html.replace("%SYSTEM_TITLE%", systemTitle);
-//      html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
-//      html.replace("%resetBtn%", resetBtn);
-//      html.replace("%toggleBtnStart%", toggleBtnStart);
-//      html.replace("%toggleBtnStop%", toggleBtnStop);
-//      
-//      // استبدال أسماء المخارج
-//      html.replace("%TOGGLE_OUTPUT_1%", toggleOutputNames[0]);
-//      html.replace("%TOGGLE_OUTPUT_2%", toggleOutputNames[1]);
-//      for (int i = 0; i < 10; i++) {
-//        html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
-//      }
-//      
-      server.send(200, "text/html", html);
-   } else {
+      // استبدال جميع العناصر النائبة أولاً
+      html.replace("%SYSTEM_TITLE%", systemTitle);
+      html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
+      html.replace("%resetBtn%", resetBtn);
+      html.replace("%toggleBtnStart%", toggleBtnStart);
+      html.replace("%toggleBtnStop%", toggleBtnStop);
+      html.replace("%TOGGLE_OUTPUT_1%", toggleOutputNames[0]);
+      html.replace("%TOGGLE_OUTPUT_2%", toggleOutputNames[1]);
+      for (int i = 0; i < 10; i++) {
+        html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
+      }
+      server.send(200, "text/html", html); // إرسال بعد الاستبدال
+    } else {
       handleConfigPage();
     }
   });
