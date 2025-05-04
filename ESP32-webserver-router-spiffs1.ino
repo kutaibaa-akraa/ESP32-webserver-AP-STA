@@ -959,11 +959,15 @@ function toggleSettings() {
   }
 }
 
-  function forceReload() { // ------ حاص بزر إعادة تحديث الصفحة --------
-  // إضافة معلمة عشوائية لإجبار التحديث
-  const randomParam = `?nocache=${Math.random().toString(36).substr(2, 9)}`;
-  window.location.href = window.location.origin + randomParam;
-  }
+function forceReload() { // ----- خاص بزر إعادة التحديث لممنع التخزين الكاش --------
+  // إرسال طلب إلى السيرفر لطباعة الرسالة
+  fetch(`/debug?msg=forceReloadCalled_${new Date().getTime()}`);
+    .then(() => {
+      // إعادة التوجيه بعد إرسال الطلب
+      const randomParam = `?nocache=${Math.random().toString(36).substr(2, 9)}`;
+      window.location.href = window.location.origin + randomParam;
+    });
+}
 
   </script>
 </body>
@@ -992,6 +996,15 @@ void handleSaveConfig();
 
 void setup() {
   Serial.begin(115200);
+
+  server.on("/debug", HTTP_GET, []() {  // إضافة مسار جديد في الخادم (مثل /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
+  if (server.hasArg("msg")) {
+    String message = server.arg("msg");
+    Serial.print("رسالة من الواجهة: ");
+    Serial.println(message);
+  }
+  server.send(200, "text/plain", "OK");
+});
   
   // تهيئة المنافذ
   for (auto& pin : pins) {
