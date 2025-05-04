@@ -241,7 +241,7 @@ const char* htmlHeader = R"rawliteral(
   <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
   
-  <link rel="stylesheet" href="../css/all.min.css"> <!-- Font Awesome --> 
+  <link rel="stylesheet" href="../css/all.min.css?version=1.1"> <!-- Font Awesome --> 
   <!-- link rel="stylesheet" href="../css/cairo.css" -->
   <!-- link rel="stylesheet" href="../css/tajawal.css" -->
   <style>
@@ -436,6 +436,18 @@ const char* cssStyles = R"rawliteral(
   font-weight: bold;
 }
   
+  .cache-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+.cache-btn:hover {
+  background: #c0392b;
+}
   </style>
 )rawliteral";
 const char* htmlBody = R"rawliteral(
@@ -503,6 +515,9 @@ const char* htmlBody = R"rawliteral(
       </div>
     </div>
   </div>
+  <button onclick="forceReload()" class="cache-btn">
+  ⟳ تحديث الصفحة (مسح التخزين)
+</button>
 </div>
     </div>
   </div>
@@ -944,6 +959,12 @@ function toggleSettings() {
   }
 }
 
+  function forceReload() { // ------ حاص بزر إعادة تحديث الصفحة --------
+  // إضافة معلمة عشوائية لإجبار التحديث
+  const randomParam = `?nocache=${Math.random().toString(36).substr(2, 9)}`;
+  window.location.href = window.location.origin + randomParam;
+  }
+
   </script>
 </body>
 </html>
@@ -1002,21 +1023,21 @@ void setup() {
   // لتكوين الستايل الخارجي لتفعيل الفونت
 // CSS
   server.on("/css/all.min.css", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         File file = SPIFFS.open("/css/all.min.css", "r");
     server.streamFile(file, "text/css");
     file.close();
   });
 
   server.on("/css/cairo.css", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/css/cairo.css", "r");
     server.streamFile(file, "text/css");
     file.close();
   });
 
   server.on("/css/tajawal.css", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/css/tajawal.css", "r");
     server.streamFile(file, "text/css");
     file.close();
@@ -1024,28 +1045,28 @@ void setup() {
 
   // الفونتات
   server.on("/fonts/Cairo-SemiBold.woff", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff", "r");
     server.streamFile(file, "application/font-woff"); // ✅
     file.close();
   });
   
  server.on("/fonts/Cairo-SemiBold.woff2", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff2", "r");
     server.streamFile(file, "application/font-woff2"); // ✅
     file.close();
   });
 
    server.on("/fonts/Tajawal-Regular.woff", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Tajawal-Regular.woff", "r");
     server.streamFile(file, "application/font-woff"); // ✅
     file.close();
   });
 
    server.on("/fonts/Tajawal-Regular.woff2", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "max-age=604800");
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Tajawal-Regular.woff2", "r");
     server.streamFile(file, "application/font-woff2"); // ✅
     file.close();
@@ -1352,7 +1373,7 @@ server.on("/", HTTP_GET, []() {
     pins[1].state = 0;
     server.send(200, "application/json", getSystemStatusJSON());
   });
-               server.sendHeader("Cache-Control", "max-age=604800"); // 7 أيام
+               server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // 7 أيام
   server.begin();
 }
 
