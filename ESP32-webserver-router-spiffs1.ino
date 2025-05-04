@@ -97,9 +97,10 @@ const char* configPageHTML = R"rawliteral(
     }
     .card {
       background: white;
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+	  padding: 40px;
+	  margin: 10px 0;
+	  border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     h1 {
       color: #2c3e50;
@@ -161,7 +162,7 @@ const char* configPageHTML = R"rawliteral(
 
 .button-danger.restore {
   background: linear-gradient(145deg, #f39c12, #e67e22);
-  margin-right: 10px;
+  
 }
 
 .button-danger.delete {
@@ -169,105 +170,104 @@ const char* configPageHTML = R"rawliteral(
 }
   </style>
 </head>
-<body>
-  <div class="card">
-    <h1>⚙️ إعدادات اتصال Wi-Fi</h1>
-    <div id="alert" class="alert"></div>
-    <form id="wifiForm" onsubmit="return validateForm(event)">
-      <div class="form-group">
-        <label for="ssid">اسم الشبكة (SSID)</label>
-        <input type="text" id="ssid" name="ssid" required>
-      </div>
-      <div class="form-group">
-        <label for="password">كلمة المرور</label>
-        <input type="password" id="password" name="password" required>
-      </div>
-      <button type="submit">حفظ الإعدادات</button>
+	<body>
+	  <div class="card">
+		<h1>⚙️ إعدادات اتصال Wi-Fi</h1>
+		<div id="alert" class="alert"></div>
+		<form id="wifiForm" onsubmit="return validateForm(event)">
+		  <div class="form-group">
+			<label for="ssid">اسم الشبكة (SSID)</label>
+			<input type="text" id="ssid" name="ssid" required>
+		  </div>
+		  <div class="form-group">
+			<label for="password">كلمة المرور</label>
+			<input type="password" id="password" name="password" required>
+		  </div>
+		  <button type="submit">حفظ الإعدادات</button>
+		</form>
+	  </div>
 
-    </form>
-  </div>
+	  <div class="danger-zone">
+		<h3>⚠️ منطقة الخطر:</h3>
+		
+		<button 
+		  onclick="resetConfig('default')" 
+		  class="button button-danger restore"
+		  title="استعادة الإعدادات الأولية للشبكة"
+		>
+		  <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
+		</button>
+		
+		<button 
+		  onclick="resetConfig('delete')" 
+		  class="button button-danger delete"
+		  title="حذف جميع الإعدادات الحالية"
+		>
+		  <i class="fas fa-trash-alt"></i> حذف الإعدادات
+		</button>
+	  </div>
 
-  <div class="danger-zone">
-    <h3>⚠️ منطقة الخطر:</h3>
-    
-    <button 
-      onclick="resetConfig('default')" 
-      class="button button-danger restore"
-      title="استعادة الإعدادات الأولية للشبكة"
-    >
-      <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
-    </button>
-    
-    <button 
-      onclick="resetConfig('delete')" 
-      class="button button-danger delete"
-      title="حذف جميع الإعدادات الحالية"
-    >
-      <i class="fas fa-trash-alt"></i> حذف الإعدادات
-    </button>
-  </div>
+	  <script>
+	  function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
+		const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
+		
+		if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
+		  return;
+		}
 
-  <script>
-  function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
-    const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
-    
-    if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
-      return;
-    }
+		const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
+		
+		fetch(endpoint, { method: 'POST' })
+		  .then(response => {
+			if (response.ok) {
+			  alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
+			  setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
+			} else {
+			  alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
+			}
+		  })
+		  .catch(error => {
+			alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+		  });
+	  }
 
-    const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
-    
-    fetch(endpoint, { method: 'POST' })
-      .then(response => {
-        if (response.ok) {
-          alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
-          setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
-        } else {
-          alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
-        }
-      })
-      .catch(error => {
-        alert("❌ حدث خطأ في الاتصال بالسيرفر!");
-      });
-  }
+		  function validateForm(e) {
+			e.preventDefault();
+			const ssid = document.getElementById('ssid').value;
+			const password = document.getElementById('password').value;
+			const alertDiv = document.getElementById('alert');
 
-      function validateForm(e) {
-        e.preventDefault();
-        const ssid = document.getElementById('ssid').value;
-        const password = document.getElementById('password').value;
-        const alertDiv = document.getElementById('alert');
+			if (ssid.length < 2 || password.length < 8) {
+			  alertDiv.style.display = 'block';
+			  alertDiv.className = 'alert alert-error';
+			  alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
+			  return false;
+			}
 
-        if (ssid.length < 2 || password.length < 8) {
-          alertDiv.style.display = 'block';
-          alertDiv.className = 'alert alert-error';
-          alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
-          return false;
-        }
+			submitForm();
+			return false;
+		  }
 
-        submitForm();
-        return false;
-      }
+		  function submitForm() {
+			const formData = new FormData(document.getElementById('wifiForm'));
+			fetch('/saveConfig', {
+			  method: 'POST',
+			  body: new URLSearchParams(formData)
+			})
+			.then(response => response.text())
+			.then(data => {
+			  const alertDiv = document.getElementById('alert');
+			  alertDiv.style.display = 'block';
+			  alertDiv.className = 'alert alert-success';
+			  alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
+			  setTimeout(() => { window.location.href = '/'; }, 3000);
+			});
+		  }
+	  </script>
 
-      function submitForm() {
-        const formData = new FormData(document.getElementById('wifiForm'));
-        fetch('/saveConfig', {
-          method: 'POST',
-          body: new URLSearchParams(formData)
-        })
-        .then(response => response.text())
-        .then(data => {
-          const alertDiv = document.getElementById('alert');
-          alertDiv.style.display = 'block';
-          alertDiv.className = 'alert alert-success';
-          alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
-          setTimeout(() => { window.location.href = '/'; }, 3000);
-        });
-      }
-  </script>
-
- </body>
+	 </body>
  </html>
- )rawliteral";
+  )rawliteral";
 
 // متغيرات النظام
 bool toggleSystemActive = false;
@@ -415,7 +415,7 @@ const char* cssStyles = R"rawliteral(
   font-family: 'Tajawal';
   font-style: normal;
   font-weight: 400;
-  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
+  src: url('/fonts/Tajawal-Regular.woff2') format('woff2');
   unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
 }
 
@@ -424,13 +424,13 @@ const char* cssStyles = R"rawliteral(
   font-family: 'Tajawal';
   font-style: normal;
   font-weight: 400;
-  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
+  src: url('/fonts/Tajawal-Regular.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
   
   @font-face {
     font-family: 'Cairo';
-    src: url('../fonts/Cairo-SemiBold.woff2') format('woff2');
+    src: url('/fonts/Cairo-SemiBold.woff2') format('woff2');
   } 
 
 .button {
@@ -831,6 +831,14 @@ const char* javascriptCode = R"rawliteral(
     out2: false,
     manual1: false,
     manual2: false,
+    manual3: false,
+    manual4: false,
+    manual5: false,
+    manual6: false,
+    manual7: false,
+    manual8: false,
+    manual9: false,
+    manual10: false,
     systemActive: false,
     systemPaused: false
   };
@@ -865,13 +873,14 @@ if (outputsState.manual1) {
 } else if (outputsState.manual2) {
   document.getElementById('manual1Btn').className = 'button button-disabled';
 }
-//يمكن تفعيل هذا الشرط إن أردت أن يعمل أحدهما و الثاني معطل  تماماً 
-//(لا يعمل حتى ينتهي الأول )و هو خيار لتأكيد الحالة
-//يتبع هذا الخيار للأزرار اليدوية التبادلية
-// else {
- // document.getElementById('manual1Btn').disabled = false;
- // document.getElementById('manual2Btn').disabled = false;
-// }
+
+// //يمكن تفعيل هذا الشرط إن أردت أن يعمل أحدهما و الثاني معطل  تماماً 
+// //(لا يعمل حتى ينتهي الأول )و هو خيار لتأكيد الحالة
+// //يتبع هذا الخيار للأزرار اليدوية التبادلية
+//     else {
+//          document.getElementById('manual1Btn').disabled = false;
+//          document.getElementById('manual2Btn').disabled = false;
+//         }
 
     // تحديث الأزرار اليدوية (1-10)
     for (let i = 1; i <= 10; i++) {
@@ -908,6 +917,7 @@ if (outputsState.manual1) {
   // ------ الأحداث التفاعلية ------  
   window.onload = function() {
     fetchStatus();    
+
     // ربط الأزرار بالدوال
     document.getElementById('out1Btn').onclick = () => toggleOutput('out1');
     document.getElementById('out2Btn').onclick = () => toggleOutput('out2');
@@ -1007,10 +1017,10 @@ function fetchStatus() {
 }
 
   // التحديث التلقائي كل ثانية
-  setInterval(fetchStatus, 1000);
+       setInterval(fetchStatus, 1000);
 
-  // التحديث التلقائي كل ثانيتين
-//  setInterval(fetchStatus, 2000);
+  // // التحديث التلقائي كل ثانيتين
+  //      setInterval(fetchStatus, 2000);
 
   // ---- قسم خاص بالمنسدلة القابلة للطي ---------
 function toggleSettings() {
@@ -1026,7 +1036,7 @@ function toggleSettings() {
   }
 }
 
-function forceReload() { // ----- خاص بزر إعادة التحديث لممنع التخزين الكاش --------
+function forceReload() { // ----- خاص بزر إعادة التحديث لمنع تخزين الكاش --------
   // إرسال طلب إلى السيرفر لطباعة الرسالة
   fetch(`/debug?msg=forceReloadCalled_${new Date().getTime()}`)
     .then(() => {
@@ -1065,7 +1075,7 @@ void resetWiFiConfig(bool restoreDefaults);
 void setup() {
   Serial.begin(115200);
 
-// مسار استعادة الإعدادات الافتراضية
+// مسار استعادة الإعدادات الافتراضية للشبكة المفترضة
 server.on("/resetConfigDefault", HTTP_POST, []() {
   resetWiFiConfig(true);
   server.send(200, "text/plain", "تم استعادة الإعدادات الافتراضية!");
@@ -1073,7 +1083,7 @@ server.on("/resetConfigDefault", HTTP_POST, []() {
   ESP.restart();
 });
 
-// مسار حذف الإعدادات
+// مسار حذف الإعدادات ---- حذف ملف ال  wifi_config.txt -------
 server.on("/resetConfigDelete", HTTP_POST, []() {
   resetWiFiConfig(false);
   server.send(200, "text/plain", "تم حذف الإعدادات!");
@@ -1081,7 +1091,7 @@ server.on("/resetConfigDelete", HTTP_POST, []() {
   ESP.restart();
 });
 
-  server.on("/debug", HTTP_GET, []() {  // إضافة مسار جديد في الخادم (مثل /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
+  server.on("/debug", HTTP_GET, []() {  // إضافة مسار جديد في الخادم ( /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
   if (server.hasArg("msg")) {
     String message = server.arg("msg");
     Serial.print("رسالة من الواجهة: ");
