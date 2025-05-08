@@ -1,13 +1,13 @@
-// كود يعمل 1
+// كود مطور و يعمل بكفاءة و الاتصال عبر wifi STA  أو عبر AP  مع واجهة حفظ إعادات الشبكة الجديدة و الاستعادة و الحذف
 // =================== 📚 المكتبات ===================
-#include <WiFi.h>          // مكتبة الاتصال بالواي فاي
-#include <WebServer.h>     // لإنشاء خادم ويب
-#include <SPIFFS.h>        // نظام ملفات داخل الشريحة لتخزين الصفحات 
+#include <WiFi.h>       // مكتبة الاتصال بالواي فاي
+#include <WebServer.h>  // لإنشاء خادم ويب
+#include <SPIFFS.h>     // نظام ملفات داخل الشريحة لتخزين الصفحات
 // مكتبة رفع الملفات -SPIFFS.h- قديمة و تعمل على اردوينو 1.8.19
 
 // =================== 🌐 إعدادات الشبكة ===================
-const char* AP_SSID = "ESP32-Control";       // اسم نقطة الوصول Access Point
-const char* AP_PASSWORD = "12345678";        // كلمة المرور
+const char* AP_SSID = "ESP32-Control";  // اسم نقطة الوصول Access Point
+const char* AP_PASSWORD = "12345678";   // كلمة المرور
 
 // تعريف المنافذ الآمنة
 // =================== ⚙️ تعريف المنافذ ===================
@@ -35,17 +35,17 @@ struct WiFiSettings {
 struct GpioPin {
   int number;                     // رقم البن
   int state;                      // حالته (1 أو 0)
-  unsigned long activationTime;  // وقت التفعيل الأخير
-  unsigned long autoOffDuration; // مدة التشغيل التلقائي قبل الإيقاف
-  const char* name;              // اسم العرض
-  const char* onCmd;             // رابط التشغيل
-  const char* offCmd;            // رابط الإيقاف
-  bool allowManualControl;       // هل يمكن التحكم يدوياً
+  unsigned long activationTime;   // وقت التفعيل الأخير
+  unsigned long autoOffDuration;  // مدة التشغيل التلقائي قبل الإيقاف
+  const char* name;               // اسم العرض
+  const char* onCmd;              // رابط التشغيل
+  const char* offCmd;             // رابط الإيقاف
+  bool allowManualControl;        // هل يمكن التحكم يدوياً
 };
 
 // =================== 🌍 متغيرات عامة ===================
-WebServer server(80);      // خادم ويب على المنفذ 80
-WiFiSettings wifiSettings; // إعدادات الشبكة 
+WebServer server(80);       // خادم ويب على المنفذ 80
+WiFiSettings wifiSettings;  // إعدادات الشبكة
 
 
 // =================== 🔌 مصفوفة تعريف المخارج ===================
@@ -68,18 +68,20 @@ GpioPin pins[] = {
 const char* systemTitle = "نظام التحكم لغسالة صناعية";
 const char* systemStatusLabel = "حالة النظام";
 const char* resetBtn = "إيقاف دوران";
-const char* toggleBtnStart ="تشغيل البرنامج";
+const char* toggleBtnStart = "تشغيل البرنامج";
 const char* toggleBtnStop = "إيقاف البرنامج";
-
 const char* toggleOutputNames[] = { "دوران يمين", "دوران يسار" };
 const char* manualOutputs[] = {
-  "فتح الباب", "إغلاق الباب", "تعبئة ماء", 
+  "فتح الباب", "إغلاق الباب", "تعبئة ماء",
   "فتح بخار", "مكب تصريف", "المخرج اليدوي 6",
   "المخرج اليدوي 7", "المخرج اليدوي 8",
   "المخرج اليدوي 9", "المخرج اليدوي 10"
 };
 
-//  ------ تحسين واجهة إعدادات الشبكة  
+// =================== 🌐 إعدادات mDNS ===================
+// const char* MDNS_NAME = "esp32-control"; // اسم الجهاز الثابت
+
+//  ------ تحسين واجهة إعدادات الشبكة
 const char* configPageHTML = R"rawliteral(
 <!DOCTYPE html>
 <html dir="rtl">
@@ -92,8 +94,9 @@ const char* configPageHTML = R"rawliteral(
       font-family: 'Tajawal', Arial, sans-serif;
       background: #f0f4f8;
       padding: 20px;
-      max-width: 600px;
+      max-width: 100%;
       margin: 0 auto;
+      text-align: center;
     }
     .card {
       background: white;
@@ -188,7 +191,7 @@ const char* configPageHTML = R"rawliteral(
 	  </div>
 
 	  <div class="danger-zone">
-		<h3>⚠️ منطقة الخطر:</h3>
+		<h3>⚠️ منطقة التهيئة - استخدمها لإعادة ضبط الشبكة للحالة الافتراضية:</h3>
 		
 		<button 
 		  onclick="resetConfig('default')" 
@@ -206,7 +209,7 @@ const char* configPageHTML = R"rawliteral(
 		  <i class="fas fa-trash-alt"></i> حذف الإعدادات
 		</button>
 	  </div>
-
+    
 	  <script>
 	  function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
 		const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
@@ -289,7 +292,7 @@ const char* WIFI_CONFIG_FILE = "/wifi_config.txt";
 bool loadWiFiConfig() {
   File file = SPIFFS.open(WIFI_CONFIG_FILE, "r");
   if (!file) return false;
-  
+
   size_t len = file.readBytes((char*)&wifiSettings, sizeof(wifiSettings));
   file.close();
   return (len == sizeof(wifiSettings));
@@ -309,12 +312,11 @@ const char* htmlHeader = R"rawliteral(
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
   
   <link rel="stylesheet" href="/css/all.min.css?version=1.1"> <!-- Font Awesome --> 
-  <!-- link rel="stylesheet" href="../css/cairo.css" -->
-  <!-- link rel="stylesheet" href="../css/tajawal.css" -->
+  <link rel="stylesheet" href="/css/cairo.css">
+  <link rel="stylesheet" href="/css/tajawal.css">
   <style>
-
   )rawliteral";
-  
+
 const char* cssStyles = R"rawliteral(
     body {
       font-family: 'Tajawal', Arial, sans-serif;
@@ -335,6 +337,8 @@ const char* cssStyles = R"rawliteral(
       padding: 20px;
       margin: 15px 0;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      align-items: center;
+      text-align: center;
     }
     
     .button {
@@ -409,8 +413,8 @@ const char* cssStyles = R"rawliteral(
     align-items: center;
     gap: 8px;
    }
-/* لتشغيل الفونت الجديد */
-/* arabic */
+
+/* arabic لتشغيل الفونت الجديد */
 @font-face {
   font-family: 'Tajawal';
   font-style: normal;
@@ -462,7 +466,7 @@ const char* cssStyles = R"rawliteral(
     padding: 12px 20px; /* مساحة داخلية */
     margin: 15px 0; /* هامش خارجي */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
-    font-family: Arial, sans-serif; /* نوع الخط */
+    font-family: 'Tajawal', sans-serif; /* نوع الخط */
     font-size: 18px; /* حجم الخط العام */
     color: #2c3e50; /* لون النص */
     display: inline-block; /* عرض مناسب للمحتوى */
@@ -482,7 +486,7 @@ const char* cssStyles = R"rawliteral(
     padding: 12px 20px; /* مساحة داخلية */
     margin: 15px 0; /* هامش خارجي */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
-    font-family: Arial, sans-serif; /* نوع الخط */
+    font-family: 'Tajawal', sans-serif; /* نوع الخط */
     font-size: 18px; /* حجم الخط العام */
     color: #2c3e50; /* لون النص */
     display: inline-block; /* عرض مناسب للمحتوى */
@@ -515,14 +519,25 @@ const char* cssStyles = R"rawliteral(
 .cache-btn:hover {
   background: #c0392b;
 }
+
+/*  خاص بزر تفحص الملفات  */
+.button-info {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  margin: 10px 0;
+}
+
+.button-info:hover {
+  background: linear-gradient(145deg, #2980b9, #3498db);
+}
   </style>
 )rawliteral";
+
 const char* htmlBody = R"rawliteral(
 </head>
 <body>
- <!-- إشعار الحفظ -->
+      <!-- إشعار الحفظ -->
       <div id="saveNotification" class="save-notification">تم الحفظ!</div>
-    </div>
+    
   <div class="card">
     <h2><i class="fas fa-cogs"></i> %SYSTEM_TITLE%</h2>
     <div class="status-box">
@@ -547,12 +562,12 @@ const char* htmlBody = R"rawliteral(
         <button id="pauseBtn" class="button button-pause"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
       </div>
      <div class="collapsible-section">
-  <button class="collapse-btn" onclick="toggleSettings()">
+   <button class="collapse-btn" onclick="toggleSettings()">
     <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
-  </button>
+   </button>
   
-  <!-- المحتوى القابل للطي -->
-  <div class="collapsible-content" id="advancedSettings">
+   <!-- المحتوى القابل للطي -->
+   <div class="collapsible-content" id="advancedSettings">
     <div class="control-settings">
       <table>
         <tr>
@@ -579,13 +594,12 @@ const char* htmlBody = R"rawliteral(
         <button onclick="resetSettings6060()" class="button button-off">60*60</button>
         <button onclick="resetSettings6090()" class="button button-off">60*90</button>
         <button onclick="resetSettings60120()" class="button button-off">60*120</button>
+        <button onclick="checkFiles()" class="button button-info"><i class="fas fa-search"></i> فحص الملفات</button>
+        <button onclick="forceReload()" class="cache-btn"> ⟳ تحديث (مسح التخزين)</button>
       </div>
     </div>
-  </div>
-  <button onclick="forceReload()" class="cache-btn">
-  ⟳ تحديث الصفحة (مسح التخزين)
-</button>
-</div>
+   </div>
+   </div>
     </div>
   </div>
 
@@ -1046,16 +1060,38 @@ function forceReload() { // ----- خاص بزر إعادة التحديث لمن
     });
 }
 
+// ----- دالة فحص وجود الملفات في السيرفر -----
+function checkFiles() {
+  fetch('/checkFiles')
+    .then(response => {
+      if (response.ok) {
+        alert("✓ تم فحص الملفات - راجع السيريال مونيتور");
+      } else {
+        alert("❌ فشل في فحص الملفات!");
+      }
+    })
+    .catch(error => {
+      alert("❌ خطأ في الاتصال!");
+    });
+}
+
   </script>
 </body>
 </html>
    )rawliteral";
 
 //--------------------دالة تجميع أجزاء صفحة الويب الواجهة ------------------------
-String fullHtmlPage = htmlHeader + String(cssStyles) + String(htmlBody) + String(javascriptCode);
+const String fullHtmlPage = String(htmlHeader) + cssStyles + htmlBody + javascriptCode;
 
 // ============ Forward Declarations ============
 // ============ التصريح المسبق عن الدوال قيل دالة الإعداد setup()  ============
+void setupServer();
+void STAsetup();
+void connectToWiFi();
+void startAPMode();
+void handleConfigPage();
+void handleSaveConfig();
+void resetWiFiConfig(bool restoreDefaults);
 String getSystemStatusJSON();
 void toggleOutput(int pinIndex);
 void toggleOutputs();
@@ -1065,73 +1101,289 @@ void pauseToggleSystem();
 void resumeToggleSystem();
 unsigned long calculateRemainingTime();
 int calculateProgress();
-void connectToWiFi();
-void startAPMode();
-void setupServer();
-void handleConfigPage();
-void handleSaveConfig();
-void resetWiFiConfig(bool restoreDefaults);
+void checkFileSystem();
 
 void setup() {
   Serial.begin(115200);
+  STAsetup();  // ------- دوال تشغيل الشبكة ---------
 
-// مسار استعادة الإعدادات الافتراضية للشبكة المفترضة
-server.on("/resetConfigDefault", HTTP_POST, []() {
-  resetWiFiConfig(true);
-  server.send(200, "text/plain", "تم استعادة الإعدادات الافتراضية!");
-  delay(1000);
-  ESP.restart();
-});
-
-// مسار حذف الإعدادات ---- حذف ملف ال  wifi_config.txt -------
-server.on("/resetConfigDelete", HTTP_POST, []() {
-  resetWiFiConfig(false);
-  server.send(200, "text/plain", "تم حذف الإعدادات!");
-  delay(1000);
-  ESP.restart();
-});
-
-  server.on("/debug", HTTP_GET, []() {  // إضافة مسار جديد في الخادم ( /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
-  if (server.hasArg("msg")) {
-    String message = server.arg("msg");
-    Serial.print("رسالة من الواجهة: ");
-    Serial.println(message);
-  }
-  server.send(200, "text/plain", "OK");
-});
-  
-  // تهيئة المنافذ
+  // -------- تهيئة المنافذ -----------
   for (auto& pin : pins) {
     pinMode(pin.number, OUTPUT);
     digitalWrite(pin.number, pin.state);
   }
-  
-  // تكوين نقطة الوصول
-  WiFi.softAP(AP_SSID, AP_PASSWORD);
-  
-// تهيئة SPIFFS
+
+  // -------- تهيئة SPIFFS ---------------
   if (!SPIFFS.begin(true)) {
     Serial.println("فشل في تهيئة SPIFFS!");
     return;
   }
-// تحقق من وجود ملفات ضرورية
+  checkFileSystem();
+
+  // -------- تحقق من وجود ملفات ضرورية --------
   if (!SPIFFS.exists("/css/all.min.css")) {
     Serial.println("ملف الستايل مفقود!");
   }
 
- // تحميل إعدادات Wi-Fi
+  // --------- تحميل إعدادات Wi-Fi ----------
   if (loadWiFiConfig()) {
     connectToWiFi();
   } else {
     startAPMode();
   }
+  server.send(200, "application/json", getSystemStatusJSON());
 
+  // // ----- بدء نقطة الوصول AP --------
+  // WiFi.softAP(AP_SSID, AP_PASSWORD);
+  // Serial.println("\nنقطة الوصول جاهزة");
+  // Serial.print("SSID: ");
+  // Serial.println(AP_SSID);
+  // Serial.print("PASSWORD: ");
+  // Serial.println(AP_PASSWORD);
+  // Serial.print("عنوان IP: ");
+  // Serial.println(WiFi.softAPIP());
+
+  server.on("/saveConfig", HTTP_POST, handleSaveConfig);
   setupServer();
-  // لتكوين الستايل الخارجي لتفعيل الفونت
-// CSS
+
+
+  server.on("/status", HTTP_GET, []() {
+    String json = getSystemStatusJSON();
+    server.send(200, "application/json", json);
+  });
+
+  server.on("/saveSettings", HTTP_POST, []() {
+    if (server.hasArg("interval")) {
+      toggleInterval = server.arg("interval").toInt() * 1000;
+      Serial.print("[حفظ] الفاصل الزمني: ");
+      Serial.println(toggleInterval / 1000);
+    }
+    if (server.hasArg("duration")) {
+      totalDuration = server.arg("duration").toInt() * 60000;
+      Serial.print("[حفظ] المدة الكلية: ");
+      Serial.println(totalDuration / 60000);
+    }
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+
+
+
+  // تهيئة المنافذ
+  for (auto& pin : pins) {
+    pinMode(pin.number, OUTPUT);
+    digitalWrite(pin.number, pin.state);
+    Serial.print("تم تهيئة المخرج: ");
+    Serial.println(pin.name);
+  }
+
+  // ------ مسارات تبديل المخارج -------
+  server.on("/out1/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج التبادلي 1");
+    toggleOutput(0);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/out2/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج التبادلي 2");
+    toggleOutput(1);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual1/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 1");
+    toggleOutput(2);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual2/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 2");
+    toggleOutput(3);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual3/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 3");
+    toggleOutput(4);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual4/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 4");
+    toggleOutput(5);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual5/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 5");
+    toggleOutput(6);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual6/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 6");
+    toggleOutput(7);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual7/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 7");
+    toggleOutput(8);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual8/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 8");
+    toggleOutput(9);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual9/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 9");
+    toggleOutput(10);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.on("/manual10/toggle", HTTP_POST, []() {
+    Serial.println("[حدث] تبديل المخرج اليدوي 10");
+    toggleOutput(11);
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+
+  // ----- مسارات النظام التبادلي -----
+  server.on("/toggle", HTTP_POST, []() {
+    if (server.hasArg("duration")) {
+      totalDuration = server.arg("duration").toInt() * 60000;
+      Serial.print("[إعداد] المدة الكلية: ");
+      Serial.print(totalDuration / 60000);
+      Serial.println(" دقيقة");
+    }
+    if (server.hasArg("interval")) {
+      toggleInterval = server.arg("interval").toInt() * 1000;
+      Serial.print("[إعداد] الفاصل الزمني: ");
+      Serial.print(toggleInterval / 1000);
+      Serial.println(" ثانية");
+    }
+
+    if (toggleSystemActive) {
+      stopToggleSystem();
+    } else {
+      startToggleSystem();
+    }
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+
+  server.on("/pause", HTTP_POST, []() {
+    if (toggleSystemPaused) {
+      resumeToggleSystem();
+    } else {
+      pauseToggleSystem();
+    }
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+
+  // مسار إعادة التعيين
+  server.on("/reset", HTTP_POST, []() {
+    Serial.println("[حدث] إعادة تعيين المخارج التبادلية");
+    digitalWrite(TOGGLE_OUT1, LOW);
+    digitalWrite(TOGGLE_OUT2, LOW);
+    pins[0].state = 0;
+    pins[1].state = 0;
+    server.send(200, "application/json", getSystemStatusJSON());
+  });
+  server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");  // 7 أيام
+  server.begin();
+}
+
+// =================== 🔁 حلقة التنفيذ  الحلقة الرئيسية ===================
+void loop() {
+  server.handleClient();
+
+  // إعادة الاتصال التلقائي إذا فُقد الاتصال
+  if (isConnected && WiFi.status() != WL_CONNECTED) {
+    Serial.println("فقدان الاتصال، إعادة المحاولة...");
+    isConnected = false;
+    connectToWiFi();
+  }
+
+  // التحقق من الإغلاق التلقائي كل ثانية
+  static unsigned long lastCheck = 0;
+  if (millis() - lastCheck >= 1000) {
+    lastCheck = millis();
+
+    for (int i = 2; i <= 11; i++) {
+      GpioPin& pin = pins[i];
+      if (pin.autoOffDuration > 0 && pin.state == HIGH) {
+        if (millis() - pin.activationTime >= pin.autoOffDuration) {
+          pin.state = LOW;
+          digitalWrite(pin.number, LOW);
+          pin.activationTime = 0;
+          Serial.print("إغلاق تلقائي: ");
+          Serial.println(pin.name);
+        }
+      }
+    }
+  }
+  if (toggleSystemActive && !toggleSystemPaused) {
+    unsigned long currentTime = millis();
+
+    if (currentTime - toggleStartTime >= totalDuration) {
+      stopToggleSystem();
+    } else if (currentTime - lastToggleTime >= toggleInterval) {
+      lastToggleTime = currentTime;
+      toggleOutputs();
+    }
+  }
+}
+
+void STAsetup() {
+  // مسار استعادة الإعدادات الافتراضية للشبكة المفترضة
+  server.on("/resetConfigDefault", HTTP_POST, []() {
+    resetWiFiConfig(true);
+    server.send(200, "text/plain", "تم استعادة الإعدادات الافتراضية!");
+    delay(1000);
+    ESP.restart();
+  });
+
+  // مسار حذف الإعدادات ---- حذف ملف ال  wifi_config.txt -------
+  server.on("/resetConfigDelete", HTTP_POST, []() {
+    resetWiFiConfig(false);
+    server.send(200, "text/plain", "تم حذف الإعدادات!");
+    delay(1000);
+    ESP.restart();
+  });
+}
+
+// ------ إعداد الخادم ------
+void setupServer() {
+
+  server.on("/", HTTP_GET, []() {
+    if (isConnected) {
+      String html = fullHtmlPage;
+
+      // -------- إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش ---------------------
+      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");  //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Pragma", "no-cache");                                    // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
+      server.sendHeader("Expires", "-1");  
+    
+      // استبدال العناوين
+      html.replace("%SYSTEM_TITLE%", systemTitle);
+      html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
+      html.replace("%resetBtn%", resetBtn);
+      html.replace("%toggleBtnStart%", toggleBtnStart);
+      html.replace("%toggleBtnStop%", toggleBtnStop);
+
+      // استبدال أسماء المخارج التبادلية
+      html.replace("%TOGGLE_OUTPUT_1%", toggleOutputNames[0]);
+      html.replace("%TOGGLE_OUTPUT_2%", toggleOutputNames[1]);
+
+      // استبدال أسماء المخارج اليدوية
+      for (int i = 0; i < 10; i++) {
+        html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
+      }
+
+    // اطبع HTML كاملة في السيريال مونيتور
+    // Serial.println("---------------- HTML النهائية ----------------"); // تستخدم للفحص فقط 
+    // Serial.println(html); // تستخدم للفحص فقط و التأكد من تحميل الصفحة في السيريال
+    // Serial.println("-----------------------------------------------");  
+      server.send(200, "text/html", html);                                        // إرسال الصفحة بعد الاستبدال
+    } else {
+      handleConfigPage();
+    }
+  });
+
+  // ----- لتكوين الستايل الخارجي لتفعيل الفونت ------------------
   server.on("/css/all.min.css", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        File file = SPIFFS.open("/css/all.min.css", "r");
+    File file = SPIFFS.open("/css/all.min.css", "r");
     server.streamFile(file, "text/css");
     file.close();
   });
@@ -1150,93 +1402,70 @@ server.on("/resetConfigDelete", HTTP_POST, []() {
     file.close();
   });
 
-  // الفونتات
+  // ------------- الفونتات -----------------------------
   server.on("/fonts/Cairo-SemiBold.woff", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff", "r");
-    server.streamFile(file, "application/font-woff"); // ✅
+    server.streamFile(file, "application/font-woff");  // ✅
     file.close();
   });
-  
- server.on("/fonts/Cairo-SemiBold.woff2", HTTP_GET, []() {
+
+  server.on("/fonts/Cairo-SemiBold.woff2", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff2", "r");
-    server.streamFile(file, "application/font-woff2"); // ✅
+    server.streamFile(file, "application/font-woff2");  // ✅
     file.close();
   });
 
-   server.on("/fonts/Tajawal-Regular.woff", HTTP_GET, []() {
+  server.on("/fonts/Tajawal-Regular.woff", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Tajawal-Regular.woff", "r");
-    server.streamFile(file, "application/font-woff"); // ✅
+    server.streamFile(file, "application/font-woff");  // ✅
     file.close();
   });
 
-   server.on("/fonts/Tajawal-Regular.woff2", HTTP_GET, []() {
+  server.on("/fonts/Tajawal-Regular.woff2", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Tajawal-Regular.woff2", "r");
-    server.streamFile(file, "application/font-woff2"); // ✅
+    server.streamFile(file, "application/font-woff2");  // ✅
     file.close();
   });
 
   server.on("/webfonts/fa-solid-900.woff2", HTTP_GET, []() {
-  File file = SPIFFS.open("/webfonts/fa-solid-900.woff2", "r");
-  server.streamFile(file, "application/font-woff2");
-  file.close();
-});
-
-server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, []() {
-  File file = SPIFFS.open("/webfonts/fa-v4compatibility.woff2", "r");
-  server.streamFile(file, "application/font-woff2");
-  file.close();
-});
-
-server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, []() {
-  File file = SPIFFS.open("/webfonts/fa-regular-400.woff2", "r");
-  server.streamFile(file, "application/font-woff2");
-  file.close();
-});
-
-server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
-  File file = SPIFFS.open("/webfonts/fa-brands-400.woff2", "r");
-  server.streamFile(file, "application/font-woff2");
-  file.close();
-});
-
-
-  
-  // في قسم setup() تحت server.on()
-  server.on("/updateSettings", HTTP_POST, []() {
-    if (server.hasArg("interval")) {
-      toggleInterval = server.arg("interval").toInt() * 1000;
-      Serial.print("[إعداد] الفاصل الزمني الجديد: ");
-      Serial.println(toggleInterval / 1000);
-    }
-
-    if (server.hasArg("duration")) {
-      totalDuration = server.arg("duration").toInt() * 60000;
-      Serial.print("[إعداد] المدة الكلية الجديدة: ");
-      Serial.println(totalDuration / 60000);
-    }
-
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-    
-  server.on("/saveSettings", HTTP_POST, []() {
-    if (server.hasArg("interval")) {
-      toggleInterval = server.arg("interval").toInt() * 1000;
-      Serial.print("[حفظ] الفاصل الزمني: ");
-      Serial.println(toggleInterval / 1000);
-    }
-    if (server.hasArg("duration")) {
-      totalDuration = server.arg("duration").toInt() * 60000;
-      Serial.print("[حفظ] المدة الكلية: ");
-      Serial.println(totalDuration / 60000);
-    }
-    server.send(200, "application/json", getSystemStatusJSON());
+    File file = SPIFFS.open("/webfonts/fa-solid-900.woff2", "r");
+    server.streamFile(file, "application/font-woff2");
+    file.close();
   });
 
-  //أعدادات السيرفر 10دقيقة * 30 ثانية
+  server.on("/webfonts/fa-v4compatibility.woff2", HTTP_GET, []() {
+    File file = SPIFFS.open("/webfonts/fa-v4compatibility.woff2", "r");
+    server.streamFile(file, "application/font-woff2");
+    file.close();
+  });
+
+  server.on("/webfonts/fa-regular-400.woff2", HTTP_GET, []() {
+    File file = SPIFFS.open("/webfonts/fa-regular-400.woff2", "r");
+    server.streamFile(file, "application/font-woff2");
+    file.close();
+  });
+
+  server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
+    File file = SPIFFS.open("/webfonts/fa-brands-400.woff2", "r");
+    server.streamFile(file, "application/font-woff2");
+    file.close();
+  });
+
+  // ------- إضافة مسار جديد في الخادم ( /debug) يستقبل الطلبات ويطبع الرسالة على السيريال ------ إرسال طلب إلى السيرفر لطباعة الرسالة
+  server.on("/debug", HTTP_GET, []() {  
+    if (server.hasArg("msg")) {
+      String message = server.arg("msg");
+      Serial.print("رسالة من الواجهة: ");
+      Serial.println(message);
+    }
+    server.send(200, "text/plain", "OK");
+  });
+
+  // ---أعدادات السيرفر 10دقيقة * 30 ثانية-----------------------
   server.on("/resetSettings", HTTP_POST, []() {
     toggleInterval = 30 * 1000;      // 30 ثانية
     totalDuration = 10 * 60 * 1000;  // 10 دقائق
@@ -1244,7 +1473,7 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
     server.send(200, "application/json", getSystemStatusJSON());
   });
 
-  //أعدادات السيرفر 20دقيقة * 30 ثانية
+  // --- أعدادات السيرفر 20دقيقة * 30 ثانية ---------------------
   server.on("/resetSettings3020", HTTP_POST, []() {
     toggleInterval = 30 * 1000;      // 30 ثانية
     totalDuration = 20 * 60 * 1000;  // 20 دقائق
@@ -1252,7 +1481,7 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
     server.send(200, "application/json", getSystemStatusJSON());
   });
 
-  //أعدادات السيرفر 15دقيقة * 60 ثانية
+  // --- أعدادات السيرفر 15دقيقة * 60 ثانية ---------------------
   server.on("/resetSettings6015", HTTP_POST, []() {
     toggleInterval = 60 * 1000;      // 60 ثانية
     totalDuration = 15 * 60 * 1000;  // 15 دقائق
@@ -1318,224 +1547,19 @@ server.on("/webfonts/fa-brands-400.woff2", HTTP_GET, []() {
         Serial.println(totalDuration / 60000);
       }
     }
-
     server.send(200, "application/json", getSystemStatusJSON());
   });
 
-  // تهيئة المنافذ
-  for (auto& pin : pins) {
-    pinMode(pin.number, OUTPUT);
-    digitalWrite(pin.number, pin.state);
-    Serial.print("تم تهيئة المخرج: ");
-    Serial.println(pin.name);
-  }
-
-  // بدء نقطة الوصول
-  WiFi.softAP(AP_SSID, AP_PASSWORD);
-  Serial.println("\nنقطة الوصول جاهزة");
-  Serial.print("SSID: ");
-  Serial.println(AP_SSID);
-  Serial.print("عنوان IP: ");
-  Serial.println(WiFi.softAPIP());
-
-  server.on("/", HTTP_GET, []() {
-    if (isConnected) {
-      String html = fullHtmlPage;
-    // استبدال العناوين
-    html.replace("%SYSTEM_TITLE%", systemTitle);
-    html.replace("%SYSTEM_STATUS_LABEL%", systemStatusLabel);
-    html.replace("%resetBtn%", resetBtn);
-    html.replace("%toggleBtnStart%", toggleBtnStart);
-    html.replace("%toggleBtnStop%", toggleBtnStop);
-
-    // استبدال أسماء المخارج التبادلية
-    html.replace("%TOGGLE_OUTPUT_1%", toggleOutputNames[0]);
-    html.replace("%TOGGLE_OUTPUT_2%", toggleOutputNames[1]);
-
-    // استبدال أسماء المخارج اليدوية
-    for (int i = 0; i < 10; i++) {
-        html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
-    }
-      //  إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش
-      server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.sendHeader("Pragma", "no-cache"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.sendHeader("Expires", "-1"); // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
-      server.send(200, "text/html", html); // إرسال الصفحة بعد الاستبدال
-     } else {
-      handleConfigPage();
-    }
-  });
-  
   server.on("/saveConfig", HTTP_POST, handleSaveConfig);
-  server.begin();
 
-  server.on("/status", HTTP_GET, []() {
-    String json = getSystemStatusJSON();
-    server.send(200, "application/json", json);
+  // ----- مسار للتحقق من وجود الملفات في spiffs بشكل يدوي بوجود زر في الواجهة
+  server.on("/checkFiles", HTTP_GET, []() {
+    checkFileSystem();
+    server.send(200, "text/plain", "تم فحص الملفات - راجع السيريال مونيتور");
   });
-
-  // مسارات تبديل المخارج
-  server.on("/out1/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج التبادلي 1");
-    toggleOutput(0);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/out2/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج التبادلي 2");
-    toggleOutput(1);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual1/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 1");
-    toggleOutput(2);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual2/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 2");
-    toggleOutput(3);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual3/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 3");
-    toggleOutput(4);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual4/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 4");
-    toggleOutput(5);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual5/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 5");
-    toggleOutput(6);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual6/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 6");
-    toggleOutput(7);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual7/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 7");
-    toggleOutput(8);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual8/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 8");
-    toggleOutput(9);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual9/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 9");
-    toggleOutput(10);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/manual10/toggle", HTTP_POST, []() {
-    Serial.println("[حدث] تبديل المخرج اليدوي 10");
-    toggleOutput(11);
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  // مسارات النظام التبادلي
-  server.on("/toggle", HTTP_POST, []() {
-    if (server.hasArg("duration")) {
-      totalDuration = server.arg("duration").toInt() * 60000;
-      Serial.print("[إعداد] المدة الكلية: ");
-      Serial.print(totalDuration / 60000);
-      Serial.println(" دقيقة");
-    }
-    if (server.hasArg("interval")) {
-      toggleInterval = server.arg("interval").toInt() * 1000;
-      Serial.print("[إعداد] الفاصل الزمني: ");
-      Serial.print(toggleInterval / 1000);
-      Serial.println(" ثانية");
-    }
-
-    if (toggleSystemActive) {
-      stopToggleSystem();
-    } else {
-      startToggleSystem();
-    }
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  server.on("/pause", HTTP_POST, []() {
-    if (toggleSystemPaused) {
-      resumeToggleSystem();
-    } else {
-      pauseToggleSystem();
-    }
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-
-  // مسار إعادة التعيين
-  server.on("/reset", HTTP_POST, []() {
-    Serial.println("[حدث] إعادة تعيين المخارج التبادلية");
-    digitalWrite(TOGGLE_OUT1, LOW);
-    digitalWrite(TOGGLE_OUT2, LOW);
-    pins[0].state = 0;
-    pins[1].state = 0;
-    server.send(200, "application/json", getSystemStatusJSON());
-  });
-               server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // 7 أيام
-  server.begin();
 }
 
-// =================== 🔁 حلقة التنفيذ  الحلقة الرئيسية ===================
-void loop() {
-  server.handleClient();
-
- // إعادة الاتصال التلقائي إذا فُقد الاتصال
-  if (isConnected && WiFi.status() != WL_CONNECTED) {
-    Serial.println("فقدان الاتصال، إعادة المحاولة...");
-    isConnected = false;
-    connectToWiFi();
-  }
-
-  // التحقق من الإغلاق التلقائي كل ثانية
-  static unsigned long lastCheck = 0;
-  if (millis() - lastCheck >= 1000) {
-    lastCheck = millis();
-
-    for (int i = 2; i <= 11; i++) {
-      GpioPin& pin = pins[i];
-      if (pin.autoOffDuration > 0 && pin.state == HIGH) {
-        if (millis() - pin.activationTime >= pin.autoOffDuration) {
-          pin.state = LOW;
-          digitalWrite(pin.number, LOW);
-          pin.activationTime = 0;
-          Serial.print("إغلاق تلقائي: ");
-          Serial.println(pin.name);
-        }
-      }
-    }
-  }
-
-
-  if (toggleSystemActive && !toggleSystemPaused) {
-    unsigned long currentTime = millis();
-
-    if (currentTime - toggleStartTime >= totalDuration) {
-      stopToggleSystem();
-    } else if (currentTime - lastToggleTime >= toggleInterval) {
-      lastToggleTime = currentTime;
-      toggleOutputs();
-    }
-  }
-}
-
-void resetWiFiConfig(bool restoreDefaults) { //  --- دالة لحذف أو استعادة الإعدادات الافتراضية للشبكة ----
+void resetWiFiConfig(bool restoreDefaults) {  //  --- دالة لحذف أو استعادة الإعدادات الافتراضية للشبكة ----
   if (restoreDefaults) {
     // استعادة الإعدادات الافتراضية
     WiFiSettings defaultSettings;
@@ -1559,7 +1583,7 @@ void resetWiFiConfig(bool restoreDefaults) { //  --- دالة لحذف أو اس
 void saveWiFiConfig() {
   File file = SPIFFS.open(WIFI_CONFIG_FILE, "w");
   if (!file) return;
-  
+
   file.write((uint8_t*)&wifiSettings, sizeof(wifiSettings));
   file.close();
 }
@@ -1567,32 +1591,36 @@ void saveWiFiConfig() {
 void connectToWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(wifiSettings.ssid, wifiSettings.password);
-  
+
   Serial.print("جاري الاتصال بشبكة WiFi...");
-  for (int i = 0; i < 20; i++) { // 20 محاولة (10 ثوانٍ)
-    if (WiFi.status() == WL_CONNECTED) { 
+  for (int i = 0; i < 20; i++) {  // 20 محاولة (10 ثوانٍ)
+    if (WiFi.status() == WL_CONNECTED) {
       isConnected = true;
       Serial.println("\nتم الاتصال!");
-      Serial.print("عنوان IP: ");
+      Serial.print("اسم الشبكة: ");
+      Serial.println(wifiSettings.ssid);
+      Serial.print("عنوان IP   : ");
       Serial.println(WiFi.localIP());
-      return; // الخروج من الدالة بعد الاتصال
+      return;  // الخروج من الدالة بعد الاتصال
     }
     delay(500);
     Serial.print(".");
   }
-  
+
   Serial.println("\nفشل الاتصال، التبديل إلى وضع AP");
-  startAPMode(); // التبديل إلى نقطة الوصول
+  startAPMode();  // التبديل إلى نقطة الوصول
 }
 
+// ----- بدء تشغيل نقطة الوصول AP -----
 void startAPMode() {
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(AP_SSID, AP_PASSWORD);
-  Serial.println("وضع AP نشط");
-  Serial.print("SSID: ");
+  WiFi.mode(WIFI_MODE_AP);            // ✅ وضع Access Point
+  WiFi.softAP(AP_SSID, AP_PASSWORD);  // إنشاء نقطة الوصول
+
+  Serial.println("\n[✔️] تم تفعيل وضع AP");
+  Serial.print("اسم الشبكة: ");
   Serial.println(AP_SSID);
   Serial.print("عنوان IP: ");
-  Serial.println(WiFi.softAPIP());
+  Serial.println(WiFi.softAPIP());  // مثال: 192.168.4.1
 }
 
 // ------ واجهة تكوين الشبكة ------
@@ -1600,33 +1628,24 @@ void handleConfigPage() {
   server.send(200, "text/html", configPageHTML);
 }
 
-void handleSaveConfig() { // ---------- حفظ إعدادات الشبكة الجديدة و إعادة التشغيل بدون تجميد الخادم -------
+void handleSaveConfig() {  // ---------- حفظ إعدادات الشبكة الجديدة و إعادة التشغيل بدون تجميد الخادم -------
   if (server.hasArg("ssid") && server.hasArg("password")) {
     // تحديث إعدادات Wi-Fi
     strncpy(wifiSettings.ssid, server.arg("ssid").c_str(), sizeof(wifiSettings.ssid));
     strncpy(wifiSettings.password, server.arg("password").c_str(), sizeof(wifiSettings.password));
-    saveWiFiConfig(); // حفظ الإعدادات في SPIFFS
+    saveWiFiConfig();  // حفظ الإعدادات في SPIFFS
   }
 
   // إرسال رد مع إعادة توجيه عبر JavaScript
-  server.send(200, "text/html", 
-    "<script>"
-    "setTimeout(() => { window.location.href = '/'; }, 3000);" // إعادة التوجيه بعد 3 ثوانٍ
-    "</script>"
-    "✓ تم حفظ الإعدادات، جارِ إعادة التشغيل..."
-  );
+  server.send(200, "text/html",
+              "<script>"
+              "setTimeout(() => { window.location.href = '/'; }, 3000);"  // إعادة التوجيه بعد 3 ثوانٍ
+              "</script>"
+              "✓ تم حفظ الإعدادات، جارِ إعادة التشغيل...");
 
   // إعادة التشغيل بعد تأخير قصير (بدون تجميد الخادم)
-  delay(100); 
+  delay(100);
   ESP.restart();
-}
-
-// ------ إعداد الخادم ------
-void setupServer() {
-
-
-  server.on("/saveConfig", HTTP_POST, handleSaveConfig);
-  server.begin();
 }
 
 // ============ دوال النظام التبادلي ============
@@ -1667,7 +1686,7 @@ void pauseToggleSystem() {
     savedToggleInterval = toggleInterval;
     digitalWrite(TOGGLE_OUT1, LOW);
     digitalWrite(TOGGLE_OUT2, LOW);
-  pins[0].state = 0;
+    pins[0].state = 0;
     pins[1].state = 0;
     Serial.println("[نظام] إيقاف مؤقت");
   }
@@ -1680,7 +1699,7 @@ void resumeToggleSystem() {
     toggleStartTime += pauseDuration;
     lastToggleTime += pauseDuration;
     toggleInterval = savedToggleInterval;
-  digitalWrite(TOGGLE_OUT1, HIGH);
+    digitalWrite(TOGGLE_OUT1, HIGH);
     digitalWrite(TOGGLE_OUT2, LOW);
     pins[0].state = 1;
     pins[1].state = 0;
@@ -1722,7 +1741,7 @@ void toggleOutput(int pinIndex) {
   // الجزء الخاص بالمخارج اليدوية (الفهرس 2 فما فوق)
   //هذا الكود صالح لتشغيل المخارج العشرة الباقية اليدوية بشكل طبيعي
   //لم يتم حذفه للاستفادة منه
- /* else {
+  /* else {
     GpioPin& pin = pins[pinIndex];
 
     if (pin.state == LOW) {
@@ -1740,64 +1759,64 @@ void toggleOutput(int pinIndex) {
     }
   } */
 
- //----------- الجزء الخاص بالمخارج اليدوية (الفهرس 2 فما فوق)---------
+  //----------- الجزء الخاص بالمخارج اليدوية (الفهرس 2 فما فوق)---------
 
- //خاص بالمخرجين اليدويين الأول و الثاني و رقمها 2 و 3 
- //حيث تم تحويلهما إلى مخرجين تبادليين متعاكسين
-else {
+  //خاص بالمخرجين اليدويين الأول و الثاني و رقمها 2 و 3
+  //حيث تم تحويلهما إلى مخرجين تبادليين متعاكسين
+  else {
     GpioPin& pin = pins[pinIndex];
 
     // معالجة خاصة للمخرجين اليدويين 1 و2 (الفهرس 2 و3)
-        // تطبيق التعاكس فقط على المخرجين 1 و 2 (index 2 و 3)
+    // تطبيق التعاكس فقط على المخرجين 1 و 2 (index 2 و 3)
     if (pinIndex == 2 || pinIndex == 3) {
-        int otherPinIndex = (pinIndex == 2) ? 3 : 2; // تحديد المخرج الآخر
-        GpioPin& otherPin = pins[otherPinIndex];
+      int otherPinIndex = (pinIndex == 2) ? 3 : 2;  // تحديد المخرج الآخر
+      GpioPin& otherPin = pins[otherPinIndex];
 
-        if (pin.state == LOW) {
-            // إيقاف المخرج الآخر إذا كان يعمل
-                    // إيقاف المخرج الآخر وإعادة ضبط توقيته
-            if (otherPin.state == HIGH) {
-                otherPin.state = LOW;
-                digitalWrite(otherPin.number, LOW);
-                otherPin.activationTime = 0; // إلغاء العد التنازلي
-                Serial.print("تم إغلاق: ");
-                Serial.println(otherPin.name);
-            }
-            
-            // تشغيل المخرج الحالي
-                    // تشغيل المخرج الحالي مع الاحتفاظ بالمدة التلقائية
-            pin.state = HIGH;
-            digitalWrite(pin.number, HIGH);
-            pin.activationTime = millis();
-            Serial.print("تم تشغيل: ");
-            Serial.println(pin.name);
-        } else {
-            // إيقاف المخرج الحالي
-            pin.state = LOW;
-            digitalWrite(pin.number, LOW);
-            pin.activationTime = 0;
-            Serial.print("تم إغلاق: ");
-            Serial.println(pin.name);
+      if (pin.state == LOW) {
+        // إيقاف المخرج الآخر إذا كان يعمل
+        // إيقاف المخرج الآخر وإعادة ضبط توقيته
+        if (otherPin.state == HIGH) {
+          otherPin.state = LOW;
+          digitalWrite(otherPin.number, LOW);
+          otherPin.activationTime = 0;  // إلغاء العد التنازلي
+          Serial.print("تم إغلاق: ");
+          Serial.println(otherPin.name);
         }
+
+        // تشغيل المخرج الحالي
+        // تشغيل المخرج الحالي مع الاحتفاظ بالمدة التلقائية
+        pin.state = HIGH;
+        digitalWrite(pin.number, HIGH);
+        pin.activationTime = millis();
+        Serial.print("تم تشغيل: ");
+        Serial.println(pin.name);
+      } else {
+        // إيقاف المخرج الحالي
+        pin.state = LOW;
+        digitalWrite(pin.number, LOW);
+        pin.activationTime = 0;
+        Serial.print("تم إغلاق: ");
+        Serial.println(pin.name);
+      }
     }
-    // معالجة باقي المخارج اليدوية (3-10) بشكل عادي 
+    // معالجة باقي المخارج اليدوية (3-10) بشكل عادي
     //بالضغط على هذه الأزرار تفتح و بالضغط مرة أخرى تغلق
     else {
-        if (pin.state == LOW) {
-            pin.state = HIGH;
-            digitalWrite(pin.number, HIGH);
-            pin.activationTime = millis();
-            Serial.print("تم تشغيل: ");
-            Serial.println(pin.name);
-        } else {
-            pin.state = LOW;
-            digitalWrite(pin.number, LOW);
-            pin.activationTime = 0;
-            Serial.print("تم إغلاق: ");
-            Serial.println(pin.name);
-        }
+      if (pin.state == LOW) {
+        pin.state = HIGH;
+        digitalWrite(pin.number, HIGH);
+        pin.activationTime = millis();
+        Serial.print("تم تشغيل: ");
+        Serial.println(pin.name);
+      } else {
+        pin.state = LOW;
+        digitalWrite(pin.number, LOW);
+        pin.activationTime = 0;
+        Serial.print("تم إغلاق: ");
+        Serial.println(pin.name);
+      }
     }
-}
+  }
 }
 
 // قسم الدوال المساعدة
@@ -1828,6 +1847,24 @@ int calculateElapsedProgress() {
   return progress > 100 ? 100 : progress;
 }
 
+// -----  التحقق من وجود الملفات في spiffs -----
+// -----  التحقق من وجود الملفات في SPIFFS وطباعتها -----
+void checkFileSystem() {
+  Serial.println("\n[فحص الملفات في SPIFFS]");
+
+  File root = SPIFFS.open("/");
+  File file = root.openNextFile();
+
+  while (file) {
+    Serial.print("الملف: ");
+    Serial.print(file.name());
+    Serial.print(" - الحجم: ");
+    Serial.println(file.size());
+    file = root.openNextFile();
+  }
+  Serial.println("----------------------------");
+}
+
 String getSystemStatusJSON() {
   String json = "{";
   json += "\"manual1ActivationTime\":" + String(pins[2].activationTime) + ",";  // ⚡ إرسال الوقت بالميلي ثانية
@@ -1847,11 +1884,11 @@ String getSystemStatusJSON() {
   json += "\"systemActive\":" + String(toggleSystemActive ? "true" : "false") + ",";
   json += "\"systemPaused\":" + String(toggleSystemPaused ? "true" : "false") + ",";
   json += "\"remainingTime\":" + String(calculateRemainingTime()) + ",";
-  json += "\"progress\":" + String(calculateProgress()) + ","; // تقدم الشريط
+  json += "\"progress\":" + String(calculateProgress()) + ",";  // تقدم الشريط
   json += "\"duration\":" + String(totalDuration / 60000) + ",";
   // json += "\"toggleInterval\":" + String(toggleInterval / 1000);
   json += "\"toggleInterval\":" + String(toggleInterval / 1000) + ",";
-  json += "\"elapsedTime\":" + String(calculateElapsedTime()) + ","; // زمن منقضي
+  json += "\"elapsedTime\":" + String(calculateElapsedTime()) + ",";    // زمن منقضي
   json += "\"elapsedProgress\":" + String(calculateElapsedProgress());  // نسبة تقدم الشريط
   json += "}";
   return json;
