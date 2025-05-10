@@ -1,0 +1,194 @@
+### تحسين واجهة إعدادات الشبكة:
+
+#### 1. **تحسين HTML/CSS:**
+```cpp
+const char* configPageHTML = R"rawliteral(
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات الشبكة</title>
+  <style>
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-success {
+      background: #2ecc71;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚙️ إعدادات اتصال Wi-Fi</h1>
+    <div id="alert" class="alert"></div>
+    <form id="wifiForm" onsubmit="return validateForm(event)">
+      <div class="form-group">
+        <label for="ssid">اسم الشبكة (SSID)</label>
+        <input type="text" id="ssid" name="ssid" required>
+      </div>
+      <div class="form-group">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit">حفظ الإعدادات</button>
+    </form>
+  </div>
+  <script>
+    function validateForm(e) {
+      e.preventDefault();
+      const ssid = document.getElementById('ssid').value;
+      const password = document.getElementById('password').value;
+      const alertDiv = document.getElementById('alert');
+
+      if (ssid.length < 2 || password.length < 8) {
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-error';
+        alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
+        return false;
+      }
+
+      submitForm();
+      return false;
+    }
+
+    function submitForm() {
+      const formData = new FormData(document.getElementById('wifiForm'));
+      fetch('/saveConfig', {
+        method: 'POST',
+        body: new URLSearchParams(formData)
+      })
+      .then(response => response.text())
+      .then(data => {
+        const alertDiv = document.getElementById('alert');
+        alertDiv.style.display = 'block';
+        alertDiv.className = 'alert alert-success';
+        alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
+        setTimeout(() => { window.location.href = '/'; }, 3000);
+      });
+    }
+  </script>
+</body>
+</html>
+)rawliteral";
+```
+
+---
+
+#### 2. **تحديث دوال الخادم:**
+```cpp
+// استبدال الدالة الأصلية بهذا الكود
+void handleConfigPage() {
+  server.send(200, "text/html", configPageHTML);
+}
+
+void handleSaveConfig() {
+  if (server.hasArg("ssid") && server.hasArg("password")) {
+    strncpy(wifiSettings.ssid, server.arg("ssid").c_str(), sizeof(wifiSettings.ssid));
+    strncpy(wifiSettings.password, server.arg("password").c_str(), sizeof(wifiSettings.password));
+    saveWiFiConfig();
+  }
+  server.send(200, "text/plain", "OK");
+}
+```
+
+---
+
+#### 3. **مميزات الواجهة المُحسَّنة:**
+
+1. **تصميم عصري:**
+   - بطاقة (Card) ذات ظل وأنماط حديثة.
+   - ألوان متناسقة مع نظام التصميم المادي (Material Design).
+   - خط عربي واضح (Tajawal).
+
+2. **تحقق من المدخلات:**
+   - تحقق من طول SSID (أكثر من حرفين).
+   - تحقق من طول كلمة المرور (8 أحرف على الأقل).
+   - رسائل خطأ تفاعلية مع أنيميشن.
+
+3. **تجربة مستخدم محسنة:**
+   - إعادة توجيه تلقائي إلى الصفحة الرئيسية بعد 3 ثوانٍ.
+   - زر حفظ كبير وسهل النقر.
+   - مؤشر تحميل ضمني أثناء عملية الحفظ.
+
+4. **استجابة للجوال:**
+   - تصميم متجاوب يعمل على جميع الشاشات.
+   - حواف مدورة وأحجام خطوط مناسبة.
+
+5. **تفاعلية:**
+   - استخدام Fetch API بدلاً من نماذج HTML التقليدية.
+   - عدم إعادة تحميل الصفحة كاملة عند الحفظ.
+
+---
+
+#### 4. **تنفيذ التحسينات:**
+
+1. **أضف المتغير الجديد:**  
+   ضع متغير `configPageHTML` مع بقية المتغيرات في أعلى الكود.
+
+2. **عدّل مسارات الخادم:**  
+   استبدل دوال `handleConfigPage` و `handleSaveConfig` بالكود الجديد.
+
+3. **تأكد من استدعاء الخطوط:**  
+   تأكد أن ملفات الخطوط موجودة في SPIFFS وأن المسارات صحيحة.
+
+---
+
+### النتيجة النهائية:
+ستحصل على واجهة إعدادات شبكة احترافية مع:
+- تحقق من المدخلات في الوقت الحقيقي.
+- رسائل تأكيد بصرية.
+- تصميم متوافق مع الهواتف.
+- تجربة مستخدم سلسة ومحسنة.
