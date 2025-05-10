@@ -1,5 +1,4 @@
 // كود مطور و يعمل بكفاءة و الاتصال عبر wifi STA  أو عبر AP  مع واجهة حفظ إعادات الشبكة الجديدة و الاستعادة و الحذف
-// تم إضافة زمنيلكل المخارج اليدوية نقلاً عن ملف المشروع  -- ESP32-webserver-new-5.ino --- 002-نسخة
 // =================== 📚 المكتبات ===================
 #include <WiFi.h>       // مكتبة الاتصال بالواي فاي
 #include <WebServer.h>  // لإنشاء خادم ويب
@@ -90,8 +89,89 @@ const char* configPageHTML = R"rawliteral(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إعدادات الشبكة</title>
-      <link rel="stylesheet" href="/css/config.css">
-	    <script src="/js/config.js"></script>
+  <style>
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+      max-width: 100%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .card {
+      background: white;
+	  padding: 40px;
+	  margin: 10px 0;
+	  border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-success {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .danger-zone {
+  border: 2px solid #ff6b6b;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+.danger-zone h3 {
+  color: #ff6b6b;
+  margin-top: 0;
+}
+
+.button-danger.restore {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+  
+}
+
+.button-danger.delete {
+  background: linear-gradient(145deg, #ff6b6b, #e55039);
+}
+  </style>
 </head>
 	<body>
 	  <div class="card">
@@ -109,8 +189,10 @@ const char* configPageHTML = R"rawliteral(
 		  <button type="submit">حفظ الإعدادات</button>
 		</form>
 	  </div>
+
 	  <div class="danger-zone">
-		<h3>⚠️ منطقة التهيئة - استخدمها لإعادة ضبط الشبكة للحالة الافتراضية:</h3>		
+		<h3>⚠️ منطقة التهيئة - استخدمها لإعادة ضبط الشبكة للحالة الافتراضية:</h3>
+		
 		<button 
 		  onclick="resetConfig('default')" 
 		  class="button button-danger restore"
@@ -127,7 +209,66 @@ const char* configPageHTML = R"rawliteral(
 		  <i class="fas fa-trash-alt"></i> حذف الإعدادات
 		</button>
 	  </div>
-    </body>
+    
+	  <script>
+	  function resetConfig(action) { // --- دالة الحذف أو إعادة التعيين لإعدادات الشبكة ------
+		const actionName = (action === 'default') ? "استعادة الإعدادات الافتراضية" : "حذف جميع الإعدادات";
+		
+		if (!confirm(`⚠️ هل أنت متأكد من ${actionName}؟ لا يمكن التراجع عن هذا الإجراء!`)) {
+		  return;
+		}
+
+		const endpoint = (action === 'default') ? '/resetConfigDefault' : '/resetConfigDelete';
+		
+		fetch(endpoint, { method: 'POST' })
+		  .then(response => {
+			if (response.ok) {
+			  alert("✅ تمت العملية بنجاح! جارِ إعادة التحميل...");
+			  setTimeout(() => location.reload(), 3000); // تأخير لإظهار الرسالة
+			} else {
+			  alert("❌ فشلت العملية! الرجاء المحاولة لاحقًا.");
+			}
+		  })
+		  .catch(error => {
+			alert("❌ حدث خطأ في الاتصال بالسيرفر!");
+		  });
+	  }
+
+		  function validateForm(e) {
+			e.preventDefault();
+			const ssid = document.getElementById('ssid').value;
+			const password = document.getElementById('password').value;
+			const alertDiv = document.getElementById('alert');
+
+			if (ssid.length < 2 || password.length < 8) {
+			  alertDiv.style.display = 'block';
+			  alertDiv.className = 'alert alert-error';
+			  alertDiv.textContent = '❗ الرجاء إدخال بيانات صحيحة (كلمة المرور 8 أحرف على الأقل)';
+			  return false;
+			}
+
+			submitForm();
+			return false;
+		  }
+
+		  function submitForm() {
+			const formData = new FormData(document.getElementById('wifiForm'));
+			fetch('/saveConfig', {
+			  method: 'POST',
+			  body: new URLSearchParams(formData)
+			})
+			.then(response => response.text())
+			.then(data => {
+			  const alertDiv = document.getElementById('alert');
+			  alertDiv.style.display = 'block';
+			  alertDiv.className = 'alert alert-success';
+			  alertDiv.textContent = '✓ تم الحفظ بنجاح، جارِ إعادة التوجيه...';
+			  setTimeout(() => { window.location.href = '/'; }, 3000);
+			});
+		  }
+	  </script>
+
+	 </body>
  </html>
   )rawliteral";
 
@@ -157,25 +298,245 @@ bool loadWiFiConfig() {
   return (len == sizeof(wifiSettings));
 }
 
+
 // روابط الخطوط والأيقونات
-const char* fullHtmlPage = R"rawliteral(
+const char* htmlHeader = R"rawliteral(
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>نظام التحكم التبادلي</title>  
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">  
-  <link rel="stylesheet" href="/css/all.min.css?v=%CACHE_BUSTER%">  <!-- fonts for Awesome --> 
+  <title>نظام التحكم التبادلي</title>
+  
+  <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
+  
+   <link rel="stylesheet" href="/css/all.min.css?v=%CACHE_BUSTER%">  <!-- fonts for Awesome --> 
   <link rel="stylesheet" href="/css/cairo.css?v=%CACHE_BUSTER%">
   <link rel="stylesheet" href="/css/tajawal.css?v=%CACHE_BUSTER%">
-  <link rel="stylesheet" href="/css/main.css?v=%CACHE_BUSTER%">
-  <script src="/js/main.js"></script> 
+  <style>
+  )rawliteral";
+
+const char* cssStyles = R"rawliteral(
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1, h2 ,h3 {
+      font-family: 'Cairo', sans-serif;
+      font-weight: 600;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      align-items: center;
+      text-align: center;
+    }
+    
+    .button {
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    .button-on { 
+      background: linear-gradient(145deg, #2ecc71, #27ae60);
+    }
+    
+    .button-off {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+    }
+
+    .button-pause { background-color: #f39c12; }
+    .button-disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+
+     .progress-container {
+      width: 100%;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    
+    .progress-bar {
+      height: 25px;
+      background: linear-gradient(90deg, #2ecc71, #3498db);
+      transition: width 0.5s ease;
+      position: relative;
+    }
+    
+    .progress-bar::after {
+      content: attr(data-progress);
+      position: absolute;
+      right: 10px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .state-active { color: #2ecc71; font-weight: bold; }
+    .state-inactive { color: #e74c3c; }
+    
+    @media (max-width: 600px) {
+      table { font-size: 14px; }
+      .button { padding: 8px 16px; }
+      .card { padding: 10px; }
+    }
+  
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background-color: #f8f9fa;
+    }
+
+   .collapsible-content.active {
+     max-height: 500px; /* أو أي قيمة تناسب محتواك */
+    }
+
+  .collapse-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+   }
+
+/* arabic لتشغيل الفونت الجديد */
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Tajawal-Regular.woff2') format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Tajawal-Regular.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+  
+  @font-face {
+    font-family: 'Cairo';
+    src: url('/fonts/Cairo-SemiBold.woff2') format('woff2');
+  } 
+
+.button {
+  position: relative; /* تأكد من أن الأزرار في المقدمة */
+  z-index: 1;
+  pointer-events: auto !important;
+}
+
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+}
+
+    .save-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+      .time-remaining {
+    background-color: #f8f9fa; /* لون الخلفية */
+    border-radius: 8px; /* زوايا مدورة */
+    padding: 12px 20px; /* مساحة داخلية */
+    margin: 15px 0; /* هامش خارجي */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
+    font-family: 'Tajawal', sans-serif; /* نوع الخط */
+    font-size: 18px; /* حجم الخط العام */
+    color: #2c3e50; /* لون النص */
+    display: inline-block; /* عرض مناسب للمحتوى */
+    border: 1px solid #e0e0e0; /* حد خفيف */
+  }
+
+  .time-remaining #remainingTime {
+    font-size: 24px; /* حجم الخط للرقم */
+    font-weight: bold; /* نص غامق */
+    color: #2ecc71; /* لون مميز للرقم */
+    margin: 0 5px; /* مسافة بين الرقم والنص */
+  }
+
+    .time-elapsed {
+    background-color: #f8f9fa; /* لون الخلفية */
+    border-radius: 8px; /* زوايا مدورة */
+    padding: 12px 20px; /* مساحة داخلية */
+    margin: 15px 0; /* هامش خارجي */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
+    font-family: 'Tajawal', sans-serif; /* نوع الخط */
+    font-size: 18px; /* حجم الخط العام */
+    color: #2c3e50; /* لون النص */
+    display: inline-block; /* عرض مناسب للمحتوى */
+    border: 1px solid #e0e0e0; /* حد خفيف */
+  }
+
+  .time-elapsed #elapsedTime {
+    font-size: 24px; /* حجم الخط للرقم */
+    font-weight: bold; /* نص غامق */
+    color: #2ecc71; /* لون مميز للرقم */
+    margin: 0 5px; /* مسافة بين الرقم والنص */
+  }
+
+  .timer {/*محتوى زمني للأزرار التبادلية اليدوية*/
+  font-size: 14px;
+  color: #e74c3c;
+  margin-right: 8px;
+  font-weight: bold;
+}
+  
+  .cache-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+.cache-btn:hover {
+  background: #c0392b;
+}
+
+/*  خاص بزر تفحص الملفات  */
+.button-info {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  margin: 10px 0;
+}
+
+.button-info:hover {
+  background: linear-gradient(145deg, #2980b9, #3498db);
+}
+  </style>
+)rawliteral";
+
+const char* htmlBody = R"rawliteral(
 </head>
 <body>
-    <!-- إشعار الحفظ -->
-    <div id="saveNotification" class="save-notification">تم الحفظ!</div>
+      <!-- إشعار الحفظ -->
+      <div id="saveNotification" class="save-notification">تم الحفظ!</div>
     
   <div class="card">
     <h2><i class="fas fa-cogs"></i> %SYSTEM_TITLE%</h2>
@@ -197,20 +558,18 @@ const char* fullHtmlPage = R"rawliteral(
       </div>
       
       <div class="control-settings">
-        <button id="toggleBtn" class="button button-on"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
+        <button id="toggleBtn" class="button"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
         <button id="pauseBtn" class="button button-pause"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
-      </div> 
-
+      </div>
      <div class="collapsible-section">
-        <button class="collapse-btn" onclick="toggleSettings()">
-        <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
-        </button>
+   <button class="collapse-btn" onclick="toggleSettings()">
+    <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
+   </button>
   
-        <!-- المحتوى القابل للطي -->
+   <!-- المحتوى القابل للطي -->
    <div class="collapsible-content" id="advancedSettings">
-      <div class="control-settings">
-        <div>
-          <table>
+    <div class="control-settings">
+      <table>
         <tr>
           <td>
             <label for="toggleInterval">زمني(ثواني)</label>
@@ -225,7 +584,7 @@ const char* fullHtmlPage = R"rawliteral(
           </td>
         </tr>
       </table>
-      </div>      
+      
       <div class="preset-buttons">
         <button onclick="resetSettings()" class="button button-off">30*10</button>
         <button onclick="resetSettings3020()" class="button button-off">30*20</button>
@@ -235,8 +594,6 @@ const char* fullHtmlPage = R"rawliteral(
         <button onclick="resetSettings6060()" class="button button-off">60*60</button>
         <button onclick="resetSettings6090()" class="button button-off">60*90</button>
         <button onclick="resetSettings60120()" class="button button-off">60*120</button>
-        </div>
-        <div>
         <button onclick="checkFiles()" class="button button-info"><i class="fas fa-search"></i> فحص الملفات</button>
         <button onclick="forceReload()" class="cache-btn"> ⟳ تحديث (مسح التخزين)</button>
       </div>
@@ -244,7 +601,9 @@ const char* fullHtmlPage = R"rawliteral(
    </div>
    </div>
     </div>
-  </div>  
+  </div>
+
+  
   <div class="card">
     <h3><i class="fas fa-exchange-alt"></i> المخارج التبادلية</h3>
      <!-- جدول المخارج التبادلية -->
@@ -269,142 +628,460 @@ const char* fullHtmlPage = R"rawliteral(
         </tbody>
       </table>
     </div>
-  </div>  
+  </div>
+  
   <div class="card">
     <h3><i class="fas fa-toggle-on"></i> المخارج اليدوية</h3>
     <table>
         <!-- صفوف المخارج اليدوية (مكررة بنمط منتظم) -->
-      <tr>
-            <td>%MANUAL_OUTPUT_1%</td>
-          <td id="manual1State">جار التحميل...</td>
-          <td>
-            <button id="manual1Btn" class="button">تشغيل</button>
-            <span id="manual1Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual1Duration" min="0" max="300" value="4">
-            <button onclick="setDuration(1)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_2%</td>
-          <td id="manual2State">جار التحميل...</td>
-          <td>
-            <button id="manual2Btn" class="button">تشغيل</button>
-            <span id="manual2Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual2Duration" min="0" max="300" value="4">
-            <button onclick="setDuration(2)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <!-- تكرار نفس الهيكل للمخارج من 3 إلى 10 -->
-        <tr>
-          <td>%MANUAL_OUTPUT_3%</td>
-          <td id="manual3State">جار التحميل...</td>
-          <td>
-            <button id="manual3Btn" class="button">تشغيل</button>
-            <span id="manual3Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual3Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(3)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_4%</td>
-          <td id="manual4State">جار التحميل...</td>
-          <td>
-            <button id="manual4Btn" class="button">تشغيل</button>
-            <span id="manual4Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual4Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(4)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_5%</td>
-          <td id="manual5State">جار التحميل...</td>
-          <td>
-            <button id="manual5Btn" class="button">تشغيل</button>
-            <span id="manual5Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual5Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(5)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_6%</td>
-          <td id="manual6State">جار التحميل...</td>
-          <td>
-            <button id="manual6Btn" class="button">تشغيل</button>
-            <span id="manual6Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual6Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(6)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_7%</td>
-          <td id="manual7State">جار التحميل...</td>
-          <td>
-            <button id="manual7Btn" class="button">تشغيل</button>
-            <span id="manual7Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual7Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(7)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_8%</td>
-          <td id="manual8State">جار التحميل...</td>
-          <td>
-            <button id="manual8Btn" class="button">تشغيل</button>
-            <span id="manual8Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual8Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(8)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_9%</td>
-          <td id="manual9State">جار التحميل...</td>
-          <td>
-            <button id="manual9Btn" class="button">تشغيل</button>
-            <span id="manual9Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual9Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(9)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        <tr>
-          <td>%MANUAL_OUTPUT_10%</td>
-          <td id="manual10State">جار التحميل...</td>
-          <td>
-            <button id="manual10Btn" class="button">تشغيل</button>
-            <span id="manual10Remaining" class="timer"></span>
-          </td>
-          <td class="duration-control">
-            <input type="number" id="manual10Duration" min="0" max="300" value="0">
-            <button onclick="setDuration(10)" class="button button-settings">تعيين</button>
-          </td>
-        </tr>
-        </tbody>
+       <tr>
+  <!-- <td>المخرج اليدوي 1</td> --><td>%MANUAL_OUTPUT_1%</td>
+  <td id="manual1State">جار التحميل...</td>
+  <td>
+    <button id="manual1Btn" class="button">جار التحميل...</button>
+    <span id="manual1Remaining" class="timer"></span>
+  </td>
+</tr>
+<tr>
+  <!-- <td>المخرج اليدوي 2</td> --><td>%MANUAL_OUTPUT_2%</td>
+  <td id="manual2State">جار التحميل...</td>
+  <td>
+    <button id="manual2Btn" class="button">جار التحميل...</button>
+    <span id="manual2Remaining" class="timer"></span>
+  </td></tr> 
+        <tr><!--<td>المخرج اليدوي 3</td> --><td>%MANUAL_OUTPUT_3%</td><td id="manual3State">جار التحميل...</td><td><button id="manual3Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 4</td> --><td>%MANUAL_OUTPUT_4%</td><td id="manual4State">جار التحميل...</td><td><button id="manual4Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 5</td> --><td>%MANUAL_OUTPUT_5%</td><td id="manual5State">جار التحميل...</td><td><button id="manual5Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 6</td> --><td>%MANUAL_OUTPUT_6%</td><td id="manual6State">جار التحميل...</td><td><button id="manual6Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 7</td> --><td>%MANUAL_OUTPUT_7%</td><td id="manual7State">جار التحميل...</td><td><button id="manual7Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 8</td> --><td>%MANUAL_OUTPUT_8%</td><td id="manual8State">جار التحميل...</td><td><button id="manual8Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 9</td> --><td>%MANUAL_OUTPUT_9%</td><td id="manual9State">جار التحميل...</td><td><button id="manual9Btn" class="button">جار التحميل...</button></td></tr>
+        <tr><!--<td>المخرج اليدوي 10</td> --><td>%MANUAL_OUTPUT_10%</td><td id="manual10State">جار التحميل...</td><td><button id="manual10Btn" class="button">جار التحميل...</button></td></tr>
+      </tbody>
     </table>
   </div>
+)rawliteral";
 
+const char* javascriptCode = R"rawliteral(
+  <script>
+    // جميع دوال الجافاسكربت المحدثة
+    function updateAllControls() {
+      // الكود المحدث مع دعم الأيقونات
+      document.getElementById('out1Btn').innerHTML = 
+        outputsState.out1 ? '<i class="fas fa-stop"></i> إيقاف' : '<i class="fas fa-play"></i> تشغيل';
+    }
+    
+
+  // ------ الدوال العامة ------
+
+  // حفظ الإعدادات
+  function saveSettings() {
+    const interval = document.getElementById('toggleInterval').value;
+    const duration = document.getElementById('duration').value;
+    fetch(`/saveSettings?interval=${interval}&duration=${duration}`, { 
+      method: 'POST' 
+    })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى الإعدادات الافتراضية
+  function resetSettings() {
+    fetch('/resetSettings', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // ------ الدوال المخصصة لإعدادات محددة ------
+  
+  // إعادة التعيين إلى 30 ثانية و20 دقيقة
+  function resetSettings3020() {
+    fetch('/resetSettings3020', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و15 دقيقة
+  function resetSettings6015() {
+    fetch('/resetSettings6015', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و30 دقيقة
+  function resetSettings6030() {
+    fetch('/resetSettings6030', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و45 دقيقة
+  function resetSettings6045() {
+    fetch('/resetSettings6045', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و60 دقيقة
+  function resetSettings6060() {
+    fetch('/resetSettings6060', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و90 دقيقة
+  function resetSettings6090() {
+    fetch('/resetSettings6090', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إعادة التعيين إلى 60 ثانية و120 دقيقة
+  function resetSettings60120() {
+    fetch('/resetSettings60120', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        document.getElementById('toggleInterval').value = data.toggleInterval;
+        document.getElementById('duration').value = data.duration;
+        showSaveNotification();
+      });
+  }
+
+  // إظهار إشعار الحفظ
+  function showSaveNotification() {
+    const notification = document.getElementById('saveNotification');
+    notification.style.display = 'block';
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 2000);
+  }
+
+  // ------ إدارة الإدخالات ------
+  
+  let durationTimer;
+  let intervalTimer;
+
+  // تأخير الإرسال لتجنب الطلبات المتكررة
+  function debounce(func, timeout = 1500) {
+    clearTimeout(durationTimer);
+    durationTimer = setTimeout(func, timeout);
+  }
+
+  // تحديث الإعدادات مع تأخير
+  function updateSettings(type, value) {
+    fetch(`/updateSettings?${type}=${value}`, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+        showSaveNotification();
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+  // ------ تهيئة الأحداث ------
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('toggleInterval').addEventListener('input', function(e) {
+      debounce(() => updateSettings('interval', e.target.value));
+    });
+
+    document.getElementById('duration').addEventListener('input', function(e) {
+      debounce(() => updateSettings('duration', e.target.value));
+    });
+  });
+
+  // ------ حالة النظام ------
+  let outputsState = {
+    out1: false,
+    out2: false,
+    manual1: false,
+    manual2: false,
+    manual3: false,
+    manual4: false,
+    manual5: false,
+    manual6: false,
+    manual7: false,
+    manual8: false,
+    manual9: false,
+    manual10: false,
+    systemActive: false,
+    systemPaused: false
+  };
+  
+  // تحديث جميع عناصر التحكم
+  function updateAllControls() {
+    // تحديث أزرار التبادل
+    const out1Btn = document.getElementById('out1Btn');
+    out1Btn.textContent = outputsState.out1 ? 'إيقاف' : 'تشغيل';
+    out1Btn.className = outputsState.out1 ? 'button button-off' : 'button button-on';
+    document.getElementById('out1State').textContent = outputsState.out1 ? 'يعمل' : 'مغلق';
+    document.getElementById('out1State').className = outputsState.out1 ? 'state-active' : 'state-inactive';
+    
+    const out2Btn = document.getElementById('out2Btn');
+    out2Btn.textContent = outputsState.out2 ? 'إيقاف' : 'تشغيل';
+    out2Btn.className = outputsState.out2 ? 'button button-off' : 'button button-on';
+    document.getElementById('out2State').textContent = outputsState.out2 ? 'يعمل' : 'مغلق';
+    document.getElementById('out2State').className = outputsState.out2 ? 'state-active' : 'state-inactive';
+
+    // تعطيل الأزرار عند التشغيل المتبادل
+    //هذا الشرط للزرين التبادليين الخاصين بالمخارج TOGGLE_OUT1 و TOGGLE_OUT2
+    if (outputsState.out1) {
+      out2Btn.className = 'button button-disabled';
+    } else if (outputsState.out2) {
+      out1Btn.className = 'button button-disabled';
+    }
+    
+// تعطيل الزر الآخر عند التشغيل - خاص بالزين اليدويين التبادليين 1 و 2 manual2Btn + manual3Btn
+//تم إضافة هذا الشرط لتفعيل الزرين اليدويين 1و2 بشكل تبادلي 
+if (outputsState.manual1) {
+  document.getElementById('manual2Btn').className = 'button button-disabled';
+} else if (outputsState.manual2) {
+  document.getElementById('manual1Btn').className = 'button button-disabled';
+}
+
+// //يمكن تفعيل هذا الشرط إن أردت أن يعمل أحدهما و الثاني معطل  تماماً 
+// //(لا يعمل حتى ينتهي الأول )و هو خيار لتأكيد الحالة
+// //يتبع هذا الخيار للأزرار اليدوية التبادلية
+//     else {
+//          document.getElementById('manual1Btn').disabled = false;
+//          document.getElementById('manual2Btn').disabled = false;
+//         }
+
+    // تحديث الأزرار اليدوية (1-10)
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.getElementById(`manual${i}Btn`);
+      const state = document.getElementById(`manual${i}State`);
+      btn.textContent = outputsState[`manual${i}`] ? 'إيقاف' : 'تشغيل';
+      btn.className = outputsState[`manual${i}`] ? 'button button-off' : 'button button-on';
+      state.textContent = outputsState[`manual${i}`] ? 'يعمل' : 'مغلق';
+      state.className = outputsState[`manual${i}`] ? 'state-active' : 'state-inactive';
+    }
+
+    // تحديث حالة النظام
+    const systemStatus = document.getElementById('systemStatus');
+    systemStatus.textContent = outputsState.systemPaused ? 'معلق' : 
+      (outputsState.systemActive ? 'يعمل' : 'متوقف');
+    systemStatus.style.color = outputsState.systemActive ? 
+      (outputsState.systemPaused ? '#f39c12' : '#2ecc71') : '#e74c3c';
+    
+    // تحديث زر التشغيل/الإيقاف
+    const toggleBtn = document.getElementById('toggleBtn');
+    toggleBtn.textContent = outputsState.systemActive ? '%toggleBtnStop%' : '%toggleBtnStart%';
+    toggleBtn.className = outputsState.systemActive ? 'button button-off' : 'button button-on';
+    
+    // تحديث زر الإيقاف المؤقت
+    const pauseBtn = document.getElementById('pauseBtn');
+    pauseBtn.textContent = outputsState.systemPaused ? 'متابعة' : 'إيقاف مؤقت';
+    pauseBtn.style.display = outputsState.systemActive ? 'inline-block' : 'none';
+    
+    // تحديث القيم المدخلة
+    document.getElementById('toggleInterval').value = outputsState.toggleInterval;
+    document.getElementById('duration').value = outputsState.duration;
+  }
+
+  // ------ الأحداث التفاعلية ------  
+  window.onload = function() {
+    fetchStatus();    
+
+    // ربط الأزرار بالدوال
+    document.getElementById('out1Btn').onclick = () => toggleOutput('out1');
+    document.getElementById('out2Btn').onclick = () => toggleOutput('out2');
+    document.getElementById('manual1Btn').onclick = () => toggleOutput('manual1');
+    document.getElementById('manual2Btn').onclick = () => toggleOutput('manual2');
+    document.getElementById('manual3Btn').onclick = () => toggleOutput('manual3');
+    document.getElementById('manual4Btn').onclick = () => toggleOutput('manual4');
+    document.getElementById('manual5Btn').onclick = () => toggleOutput('manual5');
+    document.getElementById('manual6Btn').onclick = () => toggleOutput('manual6');
+    document.getElementById('manual7Btn').onclick = () => toggleOutput('manual7');
+    document.getElementById('manual8Btn').onclick = () => toggleOutput('manual8');
+    document.getElementById('manual9Btn').onclick = () => toggleOutput('manual9');
+    document.getElementById('manual10Btn').onclick = () => toggleOutput('manual10');
+
+    // document.getElementById('elapsedTime').textContent = data.elapsedTime; //خاص بالزمن المنقضي
+    // document.getElementById('elapsedPercent').textContent = data.elapsedProgress; // خاص بالنسبة المئوية لشريط التقدم
+    
+    document.getElementById('elapsedTime').textContent = outputsState.elapsedTime;
+    document.getElementById('elapsedPercent').textContent = outputsState.elapsedProgress;
+    
+    document.getElementById('toggleBtn').onclick = toggleSystem; //خاص بالازرار التبادلية
+    document.getElementById('pauseBtn').onclick = pauseSystem; //خاص بزر التوقف المؤقت
+    document.getElementById('resetBtn').onclick = resetToggleOutputs; //خاص بزر إعادة التعيين للمخارج التبادلية
+  };
+
+  // ------ وظائف النظام ------
+  // تبديل حالة المخرج
+  function toggleOutput(outputId) {
+    fetch(`/${outputId}/toggle`, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+      });
+  }
+
+  // تشغيل/إيقاف النظام التبادلي
+  function toggleSystem() {
+    const duration = document.getElementById('duration').value;
+    const interval = document.getElementById('toggleInterval').value;
+    fetch(`/toggle?duration=${duration}&interval=${interval}`, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+      });
+  }
+
+  // إيقاف مؤقت/متابعة
+  function pauseSystem() {
+    fetch('/pause', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+      });
+  }
+
+  // إعادة تعيين المخارج التبادلية -  resetToggleOutputs()
+  function resetToggleOutputs() {
+    fetch('/reset', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        outputsState = data;
+        updateAllControls();
+      });
+  }
+
+  // جلب حالة النظام
+function fetchStatus() {
+  fetch(`/status?nocache=${Math.random()}`)
+    .then(response => response.json())
+    .then(data => {
+      outputsState = data;
+      updateAllControls();
+      document.getElementById('progressBar').style.width = data.progress + '%';
+      document.getElementById('remainingTime').textContent = data.remainingTime + ' دقيقة';
+      document.getElementById('elapsedTime').textContent = data.elapsedTime + ' دقيقة';
+      document.getElementById('elapsedPercent').textContent = data.elapsedProgress + '%';
+      
+      // تحديث العد التنازلي للمخرجين اليدويين 1 و 2
+      const updateTimer = (id, activationTime, autoOffDuration) => {
+        const element = document.getElementById(`manual${id}Remaining`);
+        if (activationTime > 0 && autoOffDuration > 0) {
+          const currentTime = Date.now();
+          const elapsed = currentTime - activationTime;
+          const remainingSeconds = Math.max(0, Math.floor((autoOffDuration - elapsed) / 1000));
+          element.textContent = remainingSeconds > 0 ? `${remainingSeconds} ثانية` : "مغلق";
+        } else {
+          element.textContent = "";
+        }
+      };
+      
+      updateTimer(1, data.manual1ActivationTime, 4000); // 4000 مللي ثانية (4 ثواني)
+      updateTimer(2, data.manual2ActivationTime, 4000);
+    });
+}
+
+  // التحديث التلقائي كل ثانية
+       setInterval(fetchStatus, 1000);
+
+  // // التحديث التلقائي كل ثانيتين
+  //      setInterval(fetchStatus, 2000);
+
+  // ---- قسم خاص بالمنسدلة القابلة للطي ---------
+function toggleSettings() {
+  const content = document.getElementById('advancedSettings');
+  const btnText = document.querySelector('.btn-text');
+  content.classList.toggle('active');
+  
+  // تحديث نص الزر ديناميكيًا
+  if (content.classList.contains('active')) {
+    btnText.innerHTML = 'إخفاء الإعدادات ▲';
+  } else {
+    btnText.innerHTML = 'إظهار الإعدادات ▼';
+  }
+}
+
+function forceReload() { // ----- خاص بزر إعادة التحديث لمنع تخزين الكاش --------
+  // إرسال طلب إلى السيرفر لطباعة الرسالة
+  fetch(`/debug?msg=forceReloadCalled_${new Date().getTime()}`)
+    .then(() => {
+      // إعادة التوجيه بعد إرسال الطلب
+      const randomParam = `?nocache=${Math.random().toString(36).substr(2, 9)}`;
+      window.location.href = window.location.origin + randomParam;
+    });
+}
+
+// ----- دالة فحص وجود الملفات في السيرفر -----
+function checkFiles() {
+  fetch('/checkFiles')
+    .then(response => {
+      if (response.ok) {
+        alert("✓ تم فحص الملفات - راجع السيريال مونيتور");
+      } else {
+        alert("❌ فشل في فحص الملفات!");
+      }
+    })
+    .catch(error => {
+      alert("❌ خطأ في الاتصال!");
+    });
+}
+
+  </script>
 </body>
 </html>
    )rawliteral";
 
-// //--------------------دالة تجميع أجزاء صفحة الويب الواجهة ------------------------
-// const String fullHtmlPage = String(htmlHeader) + cssStyles + htmlBody + javascriptCod;
+//--------------------دالة تجميع أجزاء صفحة الويب الواجهة ------------------------
+const String fullHtmlPage = String(htmlHeader) + cssStyles + htmlBody + javascriptCode;
 
 // ============ Forward Declarations ============
 // ============ التصريح المسبق عن الدوال قيل دالة الإعداد setup()  ============
@@ -429,6 +1106,7 @@ void checkFileSystem();
 void setup() {
   Serial.begin(115200);
   STAsetup();  // ------- دوال تشغيل الشبكة ---------
+
   // -------- تهيئة المنافذ -----------
   for (auto& pin : pins) {
     pinMode(pin.number, OUTPUT);
@@ -436,6 +1114,7 @@ void setup() {
     Serial.print("تم تهيئة المخرج: ");
     Serial.println(pin.name);
   }
+
   // -------- تهيئة SPIFFS ---------------
   if (!SPIFFS.begin(true)) {
     Serial.println("فشل في تهيئة SPIFFS!");
@@ -447,14 +1126,18 @@ void setup() {
   if (!SPIFFS.exists("/css/all.min.css")) {
     Serial.println("ملف الستايل مفقود!");
   }
+
   // --------- تحميل إعدادات Wi-Fi ----------
   if (loadWiFiConfig()) {
     connectToWiFi();
   } else {
     startAPMode();
   }
+
     server.send(200, "application/json", getSystemStatusJSON());
     server.on("/saveConfig", HTTP_POST, handleSaveConfig);
+
+
 
   // // ----- بدء نقطة الوصول AP --------
   // WiFi.softAP(AP_SSID, AP_PASSWORD);
@@ -468,31 +1151,13 @@ void setup() {
 
   setupServer();
 
+
   server.on("/status", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     String json = getSystemStatusJSON();
     server.send(200, "application/json", json);
   });
 
-  server.on("/setDuration", HTTP_POST, []() {  // ----- لتعديل مدة تشغيل المخرج بالثواني يدوياً من الواجهة -----
-  if (server.hasArg("pin") && server.hasArg("duration")) {
-    int pinNumber = server.arg("pin").toInt(); // رقم المخرج (1-10)
-    unsigned long duration = server.arg("duration").toInt(); // المدة بالمللي ثانية
-
-    // التحقق من أن رقم المخرج صالح (1-10)
-    if (pinNumber >= 1 && pinNumber <= 10) {
-      int pinIndex = pinNumber + 1; // لأن الفهرس 2 هو manual1، 3 هو manual2، إلخ
-      pins[pinIndex].autoOffDuration = duration;
-      
-      Serial.print("تم تعيين مدة المخرج ");
-      Serial.print(pins[pinIndex].name);
-      Serial.print(" إلى ");
-      Serial.println(duration / 1000);
-    }
-  }
-  server.send(200, "application/json", getSystemStatusJSON());
-});
-   
   server.on("/saveSettings", HTTP_POST, []() {
     if (server.hasArg("interval")) {
       toggleInterval = server.arg("interval").toInt() * 1000;
@@ -506,6 +1171,7 @@ void setup() {
     }
     server.send(200, "application/json", getSystemStatusJSON());
   });
+
 
   // ------ مسارات تبديل المخارج -------
   server.on("/out1/toggle", HTTP_POST, []() {
@@ -610,7 +1276,6 @@ void setup() {
     pins[1].state = 0;
     server.send(200, "application/json", getSystemStatusJSON());
   });
-
   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");  // 7 أيام
   server.begin();
 }
@@ -680,6 +1345,7 @@ void setupServer() {
   server.on("/", HTTP_GET, []() {
     if (isConnected) {
       String html = fullHtmlPage;
+
       html.replace("%CACHE_BUSTER%", String(random(10000)));
 
       // استبدال العناوين
@@ -698,17 +1364,17 @@ void setupServer() {
         html.replace("%MANUAL_OUTPUT_" + String(i + 1) + "%", manualOutputs[i]);
       }
 
-      // اطبع HTML كاملة في السيريال مونيتور
-      // Serial.println("---------------- HTML النهائية ----------------"); // تستخدم للفحص فقط 
-      // Serial.println(html); // تستخدم للفحص فقط و التأكد من تحميل الصفحة في السيريال
-      // Serial.println("-----------------------------------------------");  
+    // اطبع HTML كاملة في السيريال مونيتور
+    // Serial.println("---------------- HTML النهائية ----------------"); // تستخدم للفحص فقط 
+    // Serial.println(html); // تستخدم للفحص فقط و التأكد من تحميل الصفحة في السيريال
+    // Serial.println("-----------------------------------------------");  
 
       // -------- إضافة رؤوس (Headers) HTTP لمنع التخزين الكاش ---------------------
       server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");  //  لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
       server.sendHeader("Pragma", "no-cache");                                    // لتوجيه المتصفح بعدم تخزين الصفحة أو الملفات
       server.sendHeader("Expires", "-1");  
       server.send(200, "text/html", html);                                        // إرسال الصفحة بعد الاستبدال
-      } else {
+    } else {
       handleConfigPage();
     }
   });
@@ -718,34 +1384,6 @@ void setupServer() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/css/all.min.css", "r");
     server.streamFile(file, "text/css");
-    file.close();
-  });
-
-    server.on("/js/main.js", HTTP_GET, []() {  //  أكواد الجافاسكريبت
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    File file = SPIFFS.open("/js/main.js", "r");
-    server.streamFile(file, "text/javascript");
-    file.close();
-  });
-
-  server.on("/css/main.css", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    File file = SPIFFS.open("/css/main.css", "r");
-    server.streamFile(file, "text/css");
-    file.close();
-  });
-
-  server.on("/css/config.css", HTTP_GET, []() {
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    File file = SPIFFS.open("/css/config.css", "r");
-    server.streamFile(file, "text/css");
-    file.close();
-  });
-
-  server.on("/js/config.js", HTTP_GET, []() {  //  أكواد الجافاسكريبت
-    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    File file = SPIFFS.open("/js/config.js", "r");
-    server.streamFile(file, "text/javascript");
     file.close();
   });
 
@@ -763,12 +1401,27 @@ void setupServer() {
     file.close();
   });
 
+  // ------------- الفونتات -----------------------------
+  // server.on("/fonts/Cairo-SemiBold.woff", HTTP_GET, []() {
+  //   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  //   File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff", "r");
+  //   server.streamFile(file, "application/font-woff");  // ✅
+  //   file.close();
+  // });
+
   server.on("/fonts/Cairo-SemiBold.woff2", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     File file = SPIFFS.open("/fonts/Cairo-SemiBold.woff2", "r");
     server.streamFile(file, "application/font-woff2");  // ✅
     file.close();
   });
+
+  // server.on("/fonts/Tajawal-Regular.woff", HTTP_GET, []() {
+  //   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  //   File file = SPIFFS.open("/fonts/Tajawal-Regular.woff", "r");
+  //   server.streamFile(file, "application/font-woff");  // ✅
+  //   file.close();
+  // });
 
   server.on("/fonts/Tajawal-Regular.woff2", HTTP_GET, []() {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -1214,11 +1867,6 @@ void checkFileSystem() {
 
 String getSystemStatusJSON() {
   String json = "{";
-    // إرسال بيانات كل مخرج يدوي (1-10)
-  for (int i = 2; i <= 11; i++) { // الفهرس 2 = manual1 في الواجهة
-    json += "\"manual" + String(i-1) + "ActivationTime\":" + String(pins[i].activationTime) + ",";
-    json += "\"manual" + String(i-1) + "Duration\":" + String(pins[i].autoOffDuration) + ",";
-  }
   json += "\"manual1ActivationTime\":" + String(pins[2].activationTime) + ",";  // ⚡ إرسال الوقت بالميلي ثانية
   json += "\"manual2ActivationTime\":" + String(pins[3].activationTime) + ",";
   json += "\"out1\":" + String(pins[0].state ? "true" : "false") + ",";

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات الشبكة</title>
+    <link rel="stylesheet" href="/css/config.css">
+	  <script src="/js/config.js"></script>
+</head>
+	<body>
+	  <div class="card">
+		<h1>⚙️ إعدادات اتصال Wi-Fi</h1>
+		<div id="alert" class="alert"></div>
+		<form id="wifiForm" onsubmit="return validateForm(event)">
+		  <div class="form-group">
+			<label for="ssid">اسم الشبكة (SSID)</label>
+			<input type="text" id="ssid" name="ssid" required>
+		  </div>
+		  <div class="form-group">
+			<label for="password">كلمة المرور</label>
+			<input type="password" id="password" name="password" required>
+		  </div>
+		  <button type="submit">حفظ الإعدادات</button>
+		</form>
+	  </div>
+
+	  <div class="danger-zone">
+		<h3>⚠️ منطقة التهيئة - استخدمها لإعادة ضبط الشبكة للحالة الافتراضية:</h3>
+		
+		<button 
+		  onclick="resetConfig('default')" 
+		  class="button button-danger restore"
+		  title="استعادة الإعدادات الأولية للشبكة"
+		>
+		  <i class="fas fa-undo"></i> استعادة الإعدادات الافتراضية
+		</button>
+		
+		<button 
+		  onclick="resetConfig('delete')" 
+		  class="button button-danger delete"
+		  title="حذف جميع الإعدادات الحالية"
+		>
+		  <i class="fas fa-trash-alt"></i> حذف الإعدادات
+		</button>
+	  </div>
+	 </body>
+ </html>
