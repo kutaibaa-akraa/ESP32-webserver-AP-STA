@@ -1119,3 +1119,21 @@ function setDuration(pinNumber) {  // ------ لتعيين مدة تشغيل ال
   });
 
 }
+
+// ---- دالة حفظ الإعدادات --------
+function saveSystemSettings() {
+  fetch('/saveSystemSettings', { method: 'POST' })
+    .then(response => response.text())
+    .then(data => alert(data));
+}
+
+/// --- دالة استدعاء الإعدادات ------
+function loadSystemSettings() {
+  fetch('/loadSystemSettings')
+    .then(response => response.json())
+    .then(data => {
+      outputsState = data;
+      updateAllControls();
+      alert("✓ تم تحميل الإعدادات!");
+    });
+}

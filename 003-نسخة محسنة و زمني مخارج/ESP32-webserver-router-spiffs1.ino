@@ -44,6 +44,13 @@ struct GpioPin {
   bool allowManualControl;        // هل يمكن التحكم يدوياً
 };
 
+//  ---- حفظ إعدادات الأزمنة ------- يجمع كل الإعدادات القابلة للحفظ في مكان واحد مع تحسين استخدام الذاكرة.----
+struct SystemSettings {
+  unsigned long toggleInterval;     // زمن التبادل (مللي ثانية)
+  unsigned long totalDuration;      // الزمن الكلي (مللي ثانية)
+  unsigned long manualDurations[10]; // مدة التشغيل لكل مخرج يدوي (1-10)
+};
+
 // =================== 🌍 متغيرات عامة ===================
 WebServer server(80);       // خادم ويب على المنفذ 80
 WiFiSettings wifiSettings;  // إعدادات الشبكة
@@ -78,6 +85,9 @@ const char* manualOutputs[] = {
   "المخرج اليدوي 7", "المخرج اليدوي 8",
   "المخرج اليدوي 9", "المخرج اليدوي 10"
 };
+
+// ---- يقلل حجم الملف ويضمن قراءة/كتابة أسرع ------
+const char* SYSTEM_SETTINGS_FILE = "/system_settings.bin"; // استخدام تنسيق ثنائي للكفاءة
 
 // =================== 🌐 إعدادات mDNS ===================
 // const char* MDNS_NAME = "esp32-control"; // اسم الجهاز الثابت
@@ -165,8 +175,8 @@ const char* fullHtmlPage = R"rawliteral(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>نظام التحكم التبادلي</title>  
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">  
+  <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->  
   <link rel="stylesheet" href="/css/all.min.css?v=%CACHE_BUSTER%">  <!-- fonts for Awesome --> 
   <link rel="stylesheet" href="/css/cairo.css?v=%CACHE_BUSTER%">
   <link rel="stylesheet" href="/css/tajawal.css?v=%CACHE_BUSTER%">
@@ -240,6 +250,10 @@ const char* fullHtmlPage = R"rawliteral(
         <button onclick="checkFiles()" class="button button-info"><i class="fas fa-search"></i> فحص الملفات</button>
         <button onclick="forceReload()" class="cache-btn"> ⟳ تحديث (مسح التخزين)</button>
       </div>
+            <div class="preset-buttons">
+      <button onclick="saveSystemSettings()" class="button button-on">💾 حفظ الإعدادات</button>
+      <button onclick="loadSystemSettings()" class="button button-info">🔄 استعادة الإعدادات</button>
+            </div>
     </div>
    </div>
    </div>
@@ -425,6 +439,10 @@ void resumeToggleSystem();
 unsigned long calculateRemainingTime();
 int calculateProgress();
 void checkFileSystem();
+void handleLoadSystemSettings();
+void handleSaveSystemSettings();
+bool loadSystemSettings();
+void saveSystemSettings();
 
 void setup() {
   Serial.begin(115200);
@@ -656,6 +674,51 @@ void loop() {
   }
 }
 
+// حفظ الإعدادات
+void saveSystemSettings() {
+  SystemSettings settings;
+  settings.toggleInterval = toggleInterval;
+  settings.totalDuration = totalDuration;
+  for (int i=0; i<10; i++) {
+    settings.manualDurations[i] = pins[i+2].autoOffDuration; // الفهرس 2-11 للمخارج اليدوية
+  }
+
+  File file = SPIFFS.open(SYSTEM_SETTINGS_FILE, "w");
+  file.write((uint8_t*)&settings, sizeof(settings));
+  file.close();
+}
+
+// تحميل الإعدادات
+bool loadSystemSettings() {
+  File file = SPIFFS.open(SYSTEM_SETTINGS_FILE, "r");
+  if (!file) return false;
+
+  SystemSettings settings;
+  file.readBytes((char*)&settings, sizeof(settings));
+  
+  toggleInterval = settings.toggleInterval;
+  totalDuration = settings.totalDuration;
+  for (int i=0; i<10; i++) {
+    pins[i+2].autoOffDuration = settings.manualDurations[i];
+  }
+  
+  file.close();
+  return true;
+}
+
+void handleSaveSystemSettings() {
+  saveSystemSettings();
+  server.send(200, "text/plain", "تم حفظ الإعدادات!");
+}
+
+void handleLoadSystemSettings() {
+  if (loadSystemSettings()) {
+    server.send(200, "application/json", getSystemStatusJSON());
+  } else {
+    server.send(404, "text/plain", "الملف غير موجود!");
+  }
+}
+
 void STAsetup() {
   // مسار استعادة الإعدادات الافتراضية للشبكة المفترضة
   server.on("/resetConfigDefault", HTTP_POST, []() {
@@ -712,6 +775,10 @@ void setupServer() {
       handleConfigPage();
     }
   });
+
+  // ------- مسارات الحفظ و الاستعادة للأزمنة -----------------------
+server.on("/saveSystemSettings", HTTP_POST, handleSaveSystemSettings);
+server.on("/loadSystemSettings", HTTP_GET, handleLoadSystemSettings);
 
   // ----- لتكوين الستايل الخارجي لتفعيل الفونت ------------------
   server.on("/css/all.min.css", HTTP_GET, []() {
