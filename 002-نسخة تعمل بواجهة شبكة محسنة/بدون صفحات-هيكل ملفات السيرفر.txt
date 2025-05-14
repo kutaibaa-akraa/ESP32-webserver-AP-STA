@@ -1,0 +1,13 @@
+data/
+  ├── css/
+  │    ├── all.min.css
+  │    ├── cairo.css
+  │    └── tajawal.css
+  ├── fonts/
+  │    ├── Cairo-SemiBold.woff2
+  │    └── Tajawal-Regular.woff2
+  └── webfonts/
+       ├── fa-solid-900.woff2
+       ├── fa-v4compatibility.woff2
+       ├── fa-regular-400.woff2
+       └── fa-brands-400.woff2
