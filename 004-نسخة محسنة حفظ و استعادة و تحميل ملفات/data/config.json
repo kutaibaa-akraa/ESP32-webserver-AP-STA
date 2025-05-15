@@ -1,0 +1,21 @@
+{
+  "systemStatusLabel": "حالة النظام",
+  "resetBtn": "إيقاف دوران",
+  "toggleBtnStart": "تشغيل البرنامج",
+  "toggleBtnStop": "إيقاف البرنامج",
+  "toggleOutputNames": ["دوران يمين", "دوران يسار"],
+
+  "outputs": {
+    "manual": [
+      { "id": "output1", "label": "فتح الباب" },
+      { "id": "output2", "label": "إغلاق الباب" },
+      { "id": "output3", "label": "تعبئة ماء" },
+      { "id": "output4", "label": "فتح بخار" },
+      { "id": "output5", "label": "مكب تصريف" }
+    ],
+    "toggle": [
+      { "id": "toggle1", "label": "دوران يمين" },
+      { "id": "toggle2", "label": "دوران يسار" }
+    ]
+  }
+}

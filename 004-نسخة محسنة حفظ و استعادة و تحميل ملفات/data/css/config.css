@@ -1,0 +1,81 @@
+    body {
+      font-family: 'Tajawal', Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 20px;
+      max-width: 100%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .card {
+      background: white;
+	  padding: 40px;
+	  margin: 10px 0;
+	  border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-success {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .danger-zone {
+  border: 2px solid #ff6b6b;
+  padding: 15px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+.danger-zone h3 {
+  color: #ff6b6b;
+  margin-top: 0;
+}
+
+.button-danger.restore {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+  
+}
+
+.button-danger.delete {
+  background: linear-gradient(145deg, #ff6b6b, #e55039);
+}

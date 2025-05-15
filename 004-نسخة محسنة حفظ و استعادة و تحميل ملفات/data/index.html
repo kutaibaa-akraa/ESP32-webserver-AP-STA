@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>نظام التحكم التبادلي</title>  
+  <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->  
+  <link rel="stylesheet" href="/css/all.min.css?v=%CACHE_BUSTER%">  <!-- fonts for Awesome --> 
+  <link rel="stylesheet" href="/css/cairo.css?v=%CACHE_BUSTER%">
+  <link rel="stylesheet" href="/css/tajawal.css?v=%CACHE_BUSTER%">
+  <link rel="stylesheet" href="/css/main.css?v=%CACHE_BUSTER%">
+  <script src="/js/main.js"></script> 
+  <script src="/js/config.js"></script>
+</head>
+<body>
+    <!-- إشعار الحفظ -->
+    <div id="saveNotification" class="save-notification">تم الحفظ!</div>
+    
+  <div class="card">
+    <h2><i class="fas fa-cogs"></i> %SYSTEM_TITLE%</h2>
+    <div class="status-box">
+      <h2><i class="fas fa-info-circle"></i> %SYSTEM_STATUS_LABEL%: <span id="systemStatus">جار التحميل...</span></h2>
+      
+      <div class="progress-container">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      
+      <!-- الوقت المتبقي -->
+      <div class="time-remaining">
+        <i class="fas fa-clock"></i> الوقت المتبقي: <span id="remainingTime">0</span>
+      </div>
+
+       <!-- الوقت المنقضي -->
+      <div class="time-elapsed">
+        <i class="fas fa-hourglass-start"></i> الزمن المنقضي: <span id="elapsedTime">0</span>(<span id="elapsedPercent">0</span>)
+      </div>
+      
+      <div class="control-settings">
+        <button id="toggleBtn" class="button button-on"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
+        <button id="pauseBtn" class="button button-pause"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
+      </div> 
+
+     <div class="collapsible-section">
+        <button class="collapse-btn" onclick="toggleSettings()">
+        <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
+        </button>
+  
+        <!-- المحتوى القابل للطي -->
+   <div class="collapsible-content" id="advancedSettings">
+      <div class="control-settings">
+        <div>
+          <table>
+        <tr>
+          <td>
+            <label for="toggleInterval">زمني(ثواني)</label>
+            <input type="number" id="toggleInterval" min="5" max="300" value="30">
+          </td>
+          <td>
+            <label for="duration">تشغيل(دقائق)</label>
+            <input type="number" id="duration" min="1" max="120" value="10">
+          </td>
+          <td>
+            <button onclick="saveSettings()" class="button button-on">حفظ الإعدادات</button>
+          </td>
+        </tr>
+      </table>
+      </div>      
+      <div class="preset-buttons">
+        <button onclick="resetSettings()" class="button button-off">30*10</button>
+        <button onclick="resetSettings3020()" class="button button-off">30*20</button>
+        <button onclick="resetSettings6015()" class="button button-off">60*15</button>
+        <button onclick="resetSettings6030()" class="button button-off">60*30</button>
+        <button onclick="resetSettings6045()" class="button button-off">60*45</button>
+        <button onclick="resetSettings6060()" class="button button-off">60*60</button>
+        <button onclick="resetSettings6090()" class="button button-off">60*90</button>
+        <button onclick="resetSettings60120()" class="button button-off">60*120</button>
+        </div>
+        <div>
+        <button onclick="checkFiles()" class="button button-info"><i class="fas fa-search"></i> فحص الملفات</button>
+        <button onclick="forceReload()" class="cache-btn"> ⟳ تحديث (مسح التخزين)</button>
+      </div>
+	  <div class="preset-buttons">
+       <button onclick="saveSystemSettings()" class="button button-on">💾 حفظ الإعدادات</button>
+       <button onclick="loadSystemSettings()" class="button button-info">🔄 استعادة الإعدادات</button>
+	   <button 
+		  onclick="resetConfig('delete')" 
+		  class="button button-danger delete"
+		  title="حذف جميع الإعدادات الحالية"
+		>
+		  <i class="fas fa-trash-alt"></i> حذف إعدادات الشبكة
+		</button>
+     </div>
+    </div>
+   </div>
+   </div>
+    </div>
+  </div>  
+  <div class="card">
+    <h3><i class="fas fa-exchange-alt"></i> المخارج التبادلية</h3>
+
+<!-- المخارج التبادلية -->
+<div class="card">
+  <h3><i class="fas fa-exchange-alt"></i> المخارج التبادلية</h3>
+  <table id="toggleOutputsTable"></table>
+</div>
+ <!-- المخارج اليدوية -->
+<div class="card">
+  <h3><i class="fas fa-toggle-on"></i> المخارج اليدوية</h3>
+  <table id="manualOutputsTable"></table>
+</div>
+
+
+</body>
+</html>
