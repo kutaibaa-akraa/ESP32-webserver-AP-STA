@@ -39,11 +39,13 @@ body {
   padding: 8px;
   background: #f0f4f8;
   color: var(--dark);
+  line-height: 1.6;
 }
 
 h1, h2, h3 {
   font-family: 'Cairo', sans-serif;
   font-weight: 600;
+  margin-top: 0;
 }
 
 .card {
@@ -71,11 +73,12 @@ h1, h2, h3 {
   box-shadow: var(--shadow-sm);
   color: white;
   min-height: 40px;
+  font-family: 'Cairo', sans-serif;
 }
 
 .button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-md);
 }
 
 /* أنواع الأزرار */
@@ -110,30 +113,6 @@ h1, h2, h3 {
   pointer-events: none;
 }
 
-/* ======== شريط التقدم ======== */
-.progress-container {
-  width: 100%;
-  background-color: #ecf0f1;
-  border-radius: var(--radius-sm);
-  margin: 8px 0;
-}
-
-.progress-bar {
-  height: 25px;
-  background: linear-gradient(90deg, var(--secondary), var(--primary));
-  transition: width 0.5s ease;
-  position: relative;
-  border-radius: var(--radius-sm);
-}
-
-.progress-bar::after {
-  content: attr(data-progress);
-  position: absolute;
-  right: 10px;
-  color: white;
-  font-weight: bold;
-}
-
 /* ======== الحقول والمدخلات ======== */
 input[type="text"],
 input[type="password"],
@@ -144,7 +123,22 @@ input[type="number"] {
   font-size: 14px;
   transition: var(--transition);
   background: var(--light);
+  font-family: 'Tajawal', sans-serif;
 }
+
+    input[type="number"] {  /*  لمنع التحديث البصري المفاجئ */
+      width: 40px;
+      padding: 5px;
+      text-align: center;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+	
+	    input[type="number"]:focus {
+      background-color: #ffffcc; /* إشارة بصرية أن الحقل قيد التحرير -- تلوين الخلفية عند التحرير*/
+      outline: none;
+    }
 
 input:focus {
   border-color: var(--primary);
@@ -153,7 +147,7 @@ input:focus {
 }
 
 .duration-input {
-  width: 60px;
+  width: 50px;
   max-width: 100%;
   padding: 8px;
   border: 2px solid #607D8B;
@@ -199,6 +193,7 @@ input:focus {
   font-size: 16px;
   cursor: pointer;
   transition: var(--transition);
+  width: 100%;
 }
 
 .collapse-btn:hover {
@@ -212,77 +207,12 @@ input:focus {
   overflow: hidden;
   transition: max-height 0.5s ease-in-out;
   background-color: var(--light);
-  margin: 15px 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
 
 .collapsible-content.active {
   max-height: 3000px;
-}
-
-/* ======== الوقت والعدادات ======== */
-.time-remaining, .time-elapsed {
-  background-color: var(--light);
-  border-radius: var(--radius-md);
-  padding: 12px 20px;
-  margin: 15px 0;
-  box-shadow: var(--shadow-sm);
-  font-family: 'Tajawal', sans-serif;
-  font-size: 18px;
-  display: inline-block;
-  border: 1px solid var(--border);
-}
-
-.time-remaining #remainingTime, 
-.time-elapsed #elapsedTime {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--success);
-  margin: 0 5px;
-}
-
-.timer {
-  display: inline-block;
-  min-width: 60px;
-  color: var(--danger);
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-/* ======== حالات النظام ======== */
-.state-active { 
-  color: var(--success); 
-  font-weight: bold; 
-}
-
-.state-inactive { 
-  color: var(--danger); 
-}
-
-/* ======== إدارة الملفات ======== */
-.upload-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: var(--light);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-
-.upload-success {
-  color: var(--success);
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid #27ae60;
-  border-radius: var(--radius-sm);
-}
-
-.upload-error {
-  color: var(--danger);
-  padding: 10px;
-  margin-top: 10px;
-  border: 1px solid var(--danger-dark);
-  border-radius: var(--radius-sm);
 }
 
 /* ======== أقسام الخطر ======== */
@@ -302,30 +232,12 @@ input:focus {
   margin-top: 0;
 }
 
-/* ======== روابط الإدارة ======== */
-.admin-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.admin-links a {
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  padding: 12px 20px;
-  min-width: 150px;
-}
-
-/* ======== الأزرار المحددة مسبقاً ======== */
-.preset-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 20px;
+/* ======== شبكة الأزرار ======== */
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 15px;
 }
 
 /* ======== الوضع الداكن ======== */
@@ -359,17 +271,92 @@ input:focus {
   background-color: var(--hover-color);
 }
 
+/* زر تبديل الوضع الداكن - نمط موحد لجميع الصفحات */
 .dark-mode-toggle {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 1000;
   cursor: pointer;
-  padding: 10px;
+  padding: 0;
   border-radius: 50%;
   background: var(--card-bg);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
 }
+
+/* تحسين إمكانية قراءة مربعات الإدخال في الوضع الداكن */
+.dark-mode input[type="text"],
+.dark-mode input[type="password"],
+.dark-mode input[type="number"],
+.dark-mode input[type="number"]:focus {
+  color: #e0e0e0; /* لون نص فاتح */
+  background-color: #2d2d2d; /* خلفية أغمق قليلاً */
+  border-color: #555; /* لون حدود متناسب */
+}
+
+/* تعديل ظل التركيز ليكون أكثر وضوحاً في الوضع الداكن */
+.dark-mode input:focus {
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
+}
+
+/* تعديل خاص لمربعات الأرقام في الوضع الداكن */
+.dark-mode .duration-input {
+  background-color: #333;
+}
+
+/* تحسين ألوان الروابط في الوضع الداكن */
+.dark-mode a {
+  color: #4fc3f7;
+}
+
+.dark-mode a:hover {
+  color: #81d4fa;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.1) rotate(12deg);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.dark-mode-toggle i {
+  font-size: 28px;
+  color: var(--primary);
+  transition: all 0.3s ease;
+}
+
+.dark-mode .dark-mode-toggle i {
+  color: #f1c40f;
+  text-shadow: 0 0 8px rgba(241, 196, 15, 0.4);
+}
+
+.dark-mode-toggle::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--primary);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode-toggle:hover::after {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+/* تأثيرات إضافية للزر عند النقر */
+.dark-mode-toggle:active {
+  transform: scale(0.95);
+}
+/* ========نهاية الوضع الداكن =========*/
 
 /* ======== استجابة للشاشات الصغيرة ======== */
 @media (max-width: 600px) {
@@ -402,6 +389,10 @@ input:focus {
   
   .button-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .duration-control {
+    flex-wrap: wrap;
   }
 }
 
@@ -458,30 +449,12 @@ input:focus {
   10%, 90% { opacity: 1; transform: translateY(0); }
 }
 
-/* ======== أقسام الشبكة ======== */
-.network-settings {
-  margin-top: 20px;
-}
-
-.network-settings table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.network-settings td {
-  padding: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.network-settings td:first-child {
+.timer {
+  display: inline-block;
+  min-width: 70px;
   font-weight: bold;
-  width: 40%;
-}
-
-/* ======== شبكة الأزرار ======== */
-.button-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 15px;
+  font-size: 0.9em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background-color: #f8f9fa;
 }

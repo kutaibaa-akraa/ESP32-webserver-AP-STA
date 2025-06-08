@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+ <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>رفع الملفات</title>
+     <link rel="stylesheet" href="/css/all.min.css?v=1.0">
+	 <link rel="stylesheet" href="/css/cairo.css?v=1.0">
+	 <link rel="stylesheet" href="/css/tajawal.css?v=1.0">
+     <link rel="stylesheet" href="/css/base.css?v=1.0">
+     <link rel="stylesheet" href="/css/upload.css?v=1.0">
+		  <script src="/js/main.js?v=1.0"></script>
+<script>
+  // في بداية جميع الصفحات
+  const isWebView = /WebView|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  if (isWebView) {
+    // تعطيل التحديث التلقائي
+    window.stopAutoRefresh = true;
+    
+    // تعطيل خاصية pull-to-refresh
+    document.body.style.overscrollBehavior = "none";
+  }
+</script>
+</head>
+<body>
+  <!-- في بداية body لكل صفحة -->
+<div class='dark-mode-toggle' onclick='toggleDarkMode()'>
+  <i id='darkModeIcon' class='fas fa-moon'></i>
+</div>
+<div class="upload-section">
+  <h3><i class="fas fa-cloud-upload-alt"></i> رفع الملفات</h3>
+  
+  <div class="upload-guidelines">
+      <div class="guide-category">
+      <h4><i class="fas fa-file-code"></i> ملفات HTML:</h4>
+      <ul>
+        <li><span class="file-type">HTML</span>: <code>/اسم الملف.html</code></li>
+        <li>مثال: <code>/index.html</code>, <code>/config.html</code></li>
+      </ul>
+    </div>
+    <div class="guide-category">
+      <h4><i class="fas fa-paint-brush"></i> ملفات التصميم:</h4>
+      <ul>
+        <li><span class="file-type">CSS</span>: <code>/css/اسم الملف.css</code></li>
+        <li><span class="file-type">الخطوط</span>: <code>/fonts/اسم الملف.woff2</code></li>
+      </ul>
+    </div>
+
+    <div class="guide-category">
+      <h4><i class="fas fa-code"></i> ملفات البرمجة:</h4>
+      <ul>
+        <li><span class="file-type">JavaScript</span>: <code>/js/اسم الملف.js</code></li>
+      </ul>
+    </div>
+
+    <div class="guide-category">
+      <h4><i class="fas fa-cog"></i> ملفات الإعدادات:</h4>
+      <ul>
+        <li><span class="file-type">إعدادات الشبكة</span>: <code>/wifi_config.bin</code></li>
+        <li><span class="file-type">إعدادات النظام</span>: <code>/system_settings.bin</code></li>
+        <li><span class="file-type">ملفات HTML</span>: <code>/*.html</code></li>
+      </ul>
+    </div>
+
+    <div class="requirements">
+      <h4><i class="fas fa-exclamation-triangle"></i> الشروط العامة:</h4>
+      <ul>
+        <li>الحد الأقصى لحجم ملفات CSS: <b>20KB</b></li>
+        <li>الحد الأقصى لملفات BIN: <b>5KB</b></li>
+        <li>الحد الأقصى لملفات HTML: <b>30KB</b></li> <!-- إضافة شرط html -->
+        <li>الملفات ذات الصلاحيات (<i class="fas fa-shield-alt"></i>) تتطلب دخول المدير</li>
+      </ul>
+    </div>
+  </div>
+
+  <form id="uploadForm" enctype="multipart/form-data">
+    <div class="file-input-group">
+      <input type="file" name="file" id="fileInput" hidden>
+      <label for="fileInput" class="button button-upload">
+        <i class="fas fa-folder-open"></i> اختر ملف
+      </label>
+      <span id="fileName"></span>
+    </div>
+
+    <button type="button" onclick="uploadFile()" class="button button-submit">
+      <i class="fas fa-upload"></i> بدء الرفع
+    </button>
+    
+    <div id="uploadStatus" class="status-message"></div>
+	  </form>
+	<button id="manualRefreshBtn" style="display:none;" 
+			onclick="manualRefresh()" class="button button-info">
+	  <i class="fas fa-sync-alt"></i> تحديث يدوي
+	</button>
+</div>
+
+</body>
+</html>

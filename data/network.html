@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+ <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حالة اتصال الشبكة</title>
+  <link rel="stylesheet" href="/css/all.min.css?v=1.0">
+  <link rel="stylesheet" href="/css/cairo.css?v=1.0">
+  <link rel="stylesheet" href="/css/tajawal.css?v=1.0">
+  <link rel="stylesheet" href="/css/base.css?v=1.0">
+  <link rel="stylesheet" href="/css/network.css?v=1.0">
+  <script src="/js/main.js?v=1.0"></script>
+<script>
+  // في بداية جميع الصفحات
+  const isWebView = /WebView|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+  if (isWebView) {
+    // تعطيل التحديث التلقائي
+    window.stopAutoRefresh = true;
+    
+    // تعطيل خاصية pull-to-refresh
+    document.body.style.overscrollBehavior = "none";
+  }
+</script>
+</head>
+<body>
+  <!-- في بداية body لكل صفحة -->
+<div class='dark-mode-toggle' onclick='toggleDarkMode()'>
+  <i id='darkModeIcon' class='fas fa-moon'></i>
+</div>
+  <div class="card">
+    <h3><i class="fas fa-wifi"></i> إدارة الشبكة</h3>
+    %NETWORK_STATUS%
+    
+    <div class="danger-zone">
+      <div class="button-grid">
+        <button onclick="location.href='/config'" class="button button-settings">
+          <i class="fas fa-cog"></i> تعديل إعدادات الشبكة
+        </button>
+        
+        <button onclick="downloadFile('wifi_config.bin', 'network_settings.bin')" class="button button-info">
+          <i class="fas fa-download"></i> تنزيل الإعدادات
+        </button>
+      </div>
+      
+      <div class="button-grid">
+        <button onclick="resetConfig('default')" class="button button-danger">
+          <i class="fas fa-undo"></i> استعادة الافتراضية
+        </button>
+        
+        <button onclick="resetConfig('delete')" class="button button-danger">
+          <i class="fas fa-trash-alt"></i> حذف الإعدادات
+        </button>
+		<button id="manualRefreshBtn" style="display:none;" 
+				onclick="manualRefresh()" class="button button-info">
+		  <i class="fas fa-sync-alt"></i> تحديث يدوي
+		</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

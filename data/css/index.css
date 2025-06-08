@@ -1,0 +1,110 @@
+/* ======== شريط التقدم ======== */
+.progress-container {
+  width: 100%;
+  background-color: #ecf0f1;
+  border-radius: var(--radius-sm);
+  margin: 8px 0;
+}
+
+.progress-bar {
+  height: 25px;
+  background: linear-gradient(90deg, var(--secondary), var(--primary));
+  transition: width 0.5s ease;
+  position: relative;
+  border-radius: var(--radius-sm);
+}
+
+.progress-bar::after {
+  content: attr(data-progress);
+  position: absolute;
+  right: 10px;
+  color: white;
+  font-weight: bold;
+}
+
+/* ======== الوقت والعدادات ======== */
+.time-remaining, .time-elapsed {
+  background-color: var(--light);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  margin: 15px 0;
+  box-shadow: var(--shadow-sm);
+  font-family: 'Tajawal', sans-serif;
+  font-size: 18px;
+  display: inline-block;
+  border: 1px solid var(--border);
+}
+
+.time-remaining #remainingTime, 
+.time-elapsed #elapsedTime {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--success);
+  margin: 0 5px;
+}
+
+.timer {
+  display: inline-block;
+  min-width: 60px;
+  color: var(--danger);
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+/* ======== حالات النظام ======== */
+.state-active { 
+  color: var(--success); 
+  font-weight: bold; 
+}
+
+.state-inactive { 
+  color: var(--danger); 
+}
+
+/* ======== روابط الإدارة ======== */
+.admin-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.admin-links a {
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  padding: 12px 20px;
+  min-width: 150px;
+}
+
+/* ======== الأزرار المحددة مسبقاً ======== */
+.preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* ======== جداول المخارج ======== */
+.toggle-outputs table, 
+.manual-outputs table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.toggle-outputs td, 
+.manual-outputs td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.toggle-outputs tr:last-child td,
+.manual-outputs tr:last-child td {
+  border-bottom: none;
+}
+
+.manual-outputs .duration-control {
+  justify-content: flex-end;
+}

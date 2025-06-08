@@ -1,0 +1,87 @@
+.network-settings {
+  margin-top: 20px;
+}
+
+.network-settings table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.network-settings td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.network-settings td:first-child {
+  font-weight: bold;
+  width: 40%;
+}
+
+.network-status {
+  background: var(--light);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+}
+
+.network-status h4 {
+  margin-top: 0;
+  color: var(--primary-dark);
+}
+
+.network-status ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.network-status li {
+  margin-bottom: 8px;
+}
+
+.network-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.network-action-card {
+  flex: 1;
+  min-width: 200px;
+  background: var(--light);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.network-action-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--dark);
+}
+
+/* ======== الوضع الداكن لصفحة الشبكة ======== */
+.dark-mode .network-status {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .network-status h4 {
+  color: var(--primary-light);
+}
+
+.dark-mode .network-action-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .network-action-card h4 {
+  color: var(--text-color);
+}
+
+.dark-mode .danger-zone {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-color: var(--danger);
+}

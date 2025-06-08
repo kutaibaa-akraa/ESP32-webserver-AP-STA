@@ -1,0 +1,147 @@
+.upload-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--light);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.upload-guidelines {
+  background-color: #f9f9f9;
+  border-radius: var(--radius-md);
+  padding: 15px;
+  margin: 15px 0;
+  border: 1px solid var(--border);
+}
+
+.guide-category {
+  margin-bottom: 15px;
+}
+
+.guide-category h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-category ul {
+  padding-left: 20px;
+  margin: 5px 0;
+}
+
+.guide-category li {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.file-type {
+  display: inline-block;
+  background-color: var(--primary-light);
+  color: white;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.requirements {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--border);
+}
+
+.requirements h4 {
+  color: var(--warning-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requirements ul {
+  padding-left: 20px;
+}
+
+.requirements li {
+  margin-bottom: 5px;
+}
+
+.file-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.button-upload {
+  background: linear-gradient(145deg, var(--info), var(--info-dark)) !important;
+}
+
+.button-submit {
+  background: linear-gradient(145deg, var(--success), #27ae60) !important;
+}
+
+#fileName {
+  font-size: 14px;
+  color: var(--dark);
+  flex-grow: 1;
+}
+
+.upload-status {
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: var(--radius-md);
+  display: none;
+  font-weight: bold;
+}
+
+.upload-success {
+  background-color: rgba(46, 204, 113, 0.15);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.upload-error {
+  background-color: rgba(231, 76, 60, 0.15);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+/* ======== الوضع الداكن لصفحة الرفع ======== */
+.dark-mode .upload-section {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dark-mode .upload-guidelines {
+  background-color: #333;
+  border-color: var(--border-color);
+}
+
+.dark-mode .guide-category h4 {
+  color: var(--primary-light);
+}
+
+.dark-mode .file-type {
+  background-color: var(--primary);
+}
+
+.dark-mode .requirements h4 {
+  color: var(--warning);
+}
+
+.dark-mode #fileName {
+  color: var(--text-color);
+}
+
+/* تعديل ألوان رسائل الحالة في الوضع الداكن */
+.dark-mode .upload-success {
+  background-color: rgba(46, 204, 113, 0.25);
+}
+
+.dark-mode .upload-error {
+  background-color: rgba(231, 76, 60, 0.25);
+}

@@ -1,223 +1,42 @@
+
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>نظام التحكم التبادلي</title>
-  
+  <title>نظام التحكم التبادلي</title>  
   <!-- link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Cairo:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" -->  
+  <link rel="stylesheet" href="/css/all.min.css?v=1.0">  <!-- fonts for Awesome --> 
+  <link rel="stylesheet" href="/css/cairo.css?v=1.0">
+  <link rel="stylesheet" href="/css/tajawal.css?v=1.0">
+  <link rel="stylesheet" href="/css/base.css?v=1.0">
+  <link rel="stylesheet" href="/css/index.css?v=1.0">
+  <script src="/js/main.js?v=1.0"></script> 
+<script>
+  // في بداية جميع الصفحات
+  const isWebView = /WebView|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   
-   <!-- للفونت المحلي مع ستايل -->
-  <link rel="stylesheet" href="../css/all.min.css"> <!-- Font Awesome --> 
-  <!-- link rel="stylesheet" href="../css/cairo.css" -->
-  <!-- link rel="stylesheet" href="../css/tajawal.css" -->
-  <style>
-
-  )rawliteral";
-  
-const char* cssStyles = R"rawliteral(
-    body {
-      font-family: 'Tajawal', Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f0f4f8;
-    }
-
-    h1, h2 ,h3 {
-      font-family: 'Cairo', sans-serif;
-      font-weight: 600;
-    }
+  if (isWebView) {
+    // تعطيل التحديث التلقائي
+    window.stopAutoRefresh = true;
     
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 15px 0;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .button {
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    
-    .button-on { 
-      background: linear-gradient(145deg, #2ecc71, #27ae60);
-    }
-    
-    .button-off {
-      background: linear-gradient(145deg, #e74c3c, #c0392b);
-    }
-
-    .button-pause { background-color: #f39c12; }
-    .button-disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
-    }
-
-     .progress-container {
-      width: 100%;
-      background-color: #ecf0f1;
-      border-radius: 5px;
-      margin: 15px 0;
-    }
-    
-    .progress-bar {
-      height: 25px;
-      background: linear-gradient(90deg, #2ecc71, #3498db);
-      transition: width 0.5s ease;
-      position: relative;
-    }
-    
-    .progress-bar::after {
-      content: attr(data-progress);
-      position: absolute;
-      right: 10px;
-      color: white;
-      font-weight: bold;
-    }
-
-    .state-active { color: #2ecc71; font-weight: bold; }
-    .state-inactive { color: #e74c3c; }
-    
-    @media (max-width: 600px) {
-      table { font-size: 14px; }
-      .button { padding: 8px 16px; }
-      .card { padding: 10px; }
-    }
-  
-    .collapsible-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
-      background-color: #f8f9fa;
-    }
-
-   .collapsible-content.active {
-     max-height: 500px; /* أو أي قيمة تناسب محتواك */
-    }
-
-  .collapse-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-   }
-/* لتشغيل الفونت الجديد */
-/* arabic */
-@font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
-  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
-}
-
-/* latin */
-@font-face {
-  font-family: 'Tajawal';
-  font-style: normal;
-  font-weight: 400;
-  src: url('../fonts/Tajawal-Regular.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-  
-  @font-face {
-    font-family: 'Cairo';
-    src: url('../fonts/Cairo-SemiBold.woff2') format('woff2');
-  } 
-
-.button {
-  position: relative; /* تأكد من أن الأزرار في المقدمة */
-  z-index: 1;
-  pointer-events: auto !important;
-}
-
-.preset-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 10px;
-}
-
-    .save-notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #2ecc71;
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-    }
-
-      .time-remaining {
-    background-color: #f8f9fa; /* لون الخلفية */
-    border-radius: 8px; /* زوايا مدورة */
-    padding: 12px 20px; /* مساحة داخلية */
-    margin: 15px 0; /* هامش خارجي */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
-    font-family: Arial, sans-serif; /* نوع الخط */
-    font-size: 18px; /* حجم الخط العام */
-    color: #2c3e50; /* لون النص */
-    display: inline-block; /* عرض مناسب للمحتوى */
-    border: 1px solid #e0e0e0; /* حد خفيف */
+    // تعطيل خاصية pull-to-refresh
+    document.body.style.overscrollBehavior = "none";
   }
-
-  .time-remaining #remainingTime {
-    font-size: 24px; /* حجم الخط للرقم */
-    font-weight: bold; /* نص غامق */
-    color: #2ecc71; /* لون مميز للرقم */
-    margin: 0 5px; /* مسافة بين الرقم والنص */
-  }
-
-    .time-elapsed {
-    background-color: #f8f9fa; /* لون الخلفية */
-    border-radius: 8px; /* زوايا مدورة */
-    padding: 12px 20px; /* مساحة داخلية */
-    margin: 15px 0; /* هامش خارجي */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* ظل خفيف */
-    font-family: Arial, sans-serif; /* نوع الخط */
-    font-size: 18px; /* حجم الخط العام */
-    color: #2c3e50; /* لون النص */
-    display: inline-block; /* عرض مناسب للمحتوى */
-    border: 1px solid #e0e0e0; /* حد خفيف */
-  }
-
-  .time-elapsed #elapsedTime {
-    font-size: 24px; /* حجم الخط للرقم */
-    font-weight: bold; /* نص غامق */
-    color: #2ecc71; /* لون مميز للرقم */
-    margin: 0 5px; /* مسافة بين الرقم والنص */
-  }
-
-  .timer {/*محتوى زمني للأزرار التبادلية اليدوية*/
-  font-size: 14px;
-  color: #e74c3c;
-  margin-right: 8px;
-  font-weight: bold;
-}
-  
-  </style>
+</script>
 </head>
-
-)rawliteral";
-const char* htmlBody = R"rawliteral(
-
 <body>
- <!-- إشعار الحفظ -->
-      <div id="saveNotification" class="save-notification">تم الحفظ!</div>
-    </div>
-  <div class="card">
-    <h2><i class="fas fa-cogs"></i> %SYSTEM_TITLE%</h2>
+<div class='dark-mode-toggle' onclick='toggleDarkMode()'>
+    <i id='darkModeIcon' class='fas fa-moon'></i>
+  </div>
+    <!-- إشعار الحفظ -->
+    <div id="saveNotification" class="save-notification">تم الحفظ!</div>
+    
+  <div class="card"><!-- card 2 -->
+    <h3><i class="fas fa-cogs"></i> %SYSTEM_TITLE%</h3>
     <div class="status-box">
-      <h2><i class="fas fa-info-circle"></i> %SYSTEM_STATUS_LABEL%: <span id="systemStatus">جار التحميل...</span></h2>
+      <h3><i class="fas fa-info-circle"></i> %SYSTEM_STATUS_LABEL%: <span id="systemStatus">جار التحميل...</span></h3>
       
       <div class="progress-container">
         <div id="progressBar" class="progress-bar"></div>
@@ -234,37 +53,40 @@ const char* htmlBody = R"rawliteral(
       </div>
       
       <div class="control-settings">
-        <button id="toggleBtn" class="button"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
+        <button id="toggleBtn" class="button button-on"><i class="fas fa-power-off"></i> %toggleBtnStart%</button>
         <button id="pauseBtn" class="button button-pause"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
-      </div>
-    
-    </div>
-    
- <div class="collapsible-section">
-  <button class="collapse-btn" onclick="toggleSettings()">
-    <i class="fas fa-cog"></i> <span class="btn-text">إظهار الإعدادات ▼</span>
-  </button>
-  
-  <!-- المحتوى القابل للطي -->
-  <div class="collapsible-content" id="advancedSettings">
-    <div class="control-settings">
-      <table>
+      </div> 
+</div><!-- status-box -->
+</div><!-- card 2-->
+             <div class="card">
+ <button class="collapse-btn" onclick="toggleSettings()">
+  <i class="fas fa-cog"></i>
+  <span class="btn-text">إظهار الإعدادات ▼</span>
+</button>
+
+            </div>
+        <!-- المحتوى القابل للطي -->
+<div class="collapsible-content" id="advancedSettings">
+        <div class="card">
+          <table>
         <tr>
           <td>
-            <label for="toggleInterval">زمني(ثواني)</label>
-            <input type="number" id="toggleInterval" min="5" max="300" value="30">
+            <label for="toggleInterval">تبديل(ثواني)</label>
+            <input type="number" class="duration-input" id="toggleInterval" min="5" max="300" value="30">
           </td>
-          <td>
+          <td><label for="pauseDuration">استراحة(ثواني)</label>
+        <input type="number" class="duration-input" id="pauseDuration" min="0" max="10" value="0"></td>
+         <td>
             <label for="duration">تشغيل(دقائق)</label>
-            <input type="number" id="duration" min="1" max="120" value="10">
+            <input type="number" class="duration-input" id="duration" min="1" max="120" value="10">
           </td>
           <td>
             <button onclick="saveSettings()" class="button button-on">حفظ الإعدادات</button>
           </td>
         </tr>
       </table>
-      
-      <div class="preset-buttons">
+      </div>      
+      <div class="preset-buttons card">
         <button onclick="resetSettings()" class="button button-off">30*10</button>
         <button onclick="resetSettings3020()" class="button button-off">30*20</button>
         <button onclick="resetSettings6015()" class="button button-off">60*15</button>
@@ -273,11 +95,26 @@ const char* htmlBody = R"rawliteral(
         <button onclick="resetSettings6060()" class="button button-off">60*60</button>
         <button onclick="resetSettings6090()" class="button button-off">60*90</button>
         <button onclick="resetSettings60120()" class="button button-off">60*120</button>
-      </div>
-    </div>
-  </div>
+        </div>
+ <div class="card preset-buttons">
+  <button onclick="checkFiles()" class="button button-info">
+    <i class="fas fa-search"></i> فحص الملفات
+  </button>
+  
+  <button onclick="forceReload()" class="button button-warning">
+    <i class="fas fa-sync-alt"></i> تحديث ومسح التخزين
+  </button>
 </div>
-</div>  
+            <div class="card preset-buttons">
+      <button onclick="saveSystemSettings()" class="button button-on">💾 حفظ الإعدادات الزمنية</button>
+      <button onclick="loadSystemSettings()" class="button button-info">🔄 استعادة الإعدادات الزمنية</button>
+            </div>             
+	        <div class="card admin-links">
+      <button onclick="location.href='/config'" class="button button-settings">إعدادات الشبكة</button>
+      <button onclick="location.href='/networkstatus'" class="button button-settings">حالةالشبكة </button>
+      <button onclick="location.href='/uploadfile'" class="button button-settings">رفع الملفات</button>
+           </div>     
+	  </div> <!-- End of collapsible-section -->
   <div class="card">
     <h3><i class="fas fa-exchange-alt"></i> المخارج التبادلية</h3>
      <!-- جدول المخارج التبادلية -->
@@ -302,37 +139,146 @@ const char* htmlBody = R"rawliteral(
         </tbody>
       </table>
     </div>
-  </div>
-  
+  </div>  
+
   <div class="card">
     <h3><i class="fas fa-toggle-on"></i> المخارج اليدوية</h3>
     <table>
         <!-- صفوف المخارج اليدوية (مكررة بنمط منتظم) -->
-       <tr>
-  <!-- <td>المخرج اليدوي 1</td> --><td>%MANUAL_OUTPUT_1%</td>
-  <td id="manual1State">جار التحميل...</td>
-  <td>
-    <button id="manual1Btn" class="button">جار التحميل...</button>
-    <span id="manual1Remaining" class="timer"></span>
-  </td>
-</tr>
-<tr>
-  <!-- <td>المخرج اليدوي 2</td> --><td>%MANUAL_OUTPUT_2%</td>
-  <td id="manual2State">جار التحميل...</td>
-  <td>
-    <button id="manual2Btn" class="button">جار التحميل...</button>
-    <span id="manual2Remaining" class="timer"></span>
-  </td></tr> 
-        <tr><!--<td>المخرج اليدوي 3</td> --><td>%MANUAL_OUTPUT_3%</td><td id="manual3State">جار التحميل...</td><td><button id="manual3Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 4</td> --><td>%MANUAL_OUTPUT_4%</td><td id="manual4State">جار التحميل...</td><td><button id="manual4Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 5</td> --><td>%MANUAL_OUTPUT_5%</td><td id="manual5State">جار التحميل...</td><td><button id="manual5Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 6</td> --><td>%MANUAL_OUTPUT_6%</td><td id="manual6State">جار التحميل...</td><td><button id="manual6Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 7</td> --><td>%MANUAL_OUTPUT_7%</td><td id="manual7State">جار التحميل...</td><td><button id="manual7Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 8</td> --><td>%MANUAL_OUTPUT_8%</td><td id="manual8State">جار التحميل...</td><td><button id="manual8Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 9</td> --><td>%MANUAL_OUTPUT_9%</td><td id="manual9State">جار التحميل...</td><td><button id="manual9Btn" class="button">جار التحميل...</button></td></tr>
-        <tr><!--<td>المخرج اليدوي 10</td> --><td>%MANUAL_OUTPUT_10%</td><td id="manual10State">جار التحميل...</td><td><button id="manual10Btn" class="button">جار التحميل...</button></td></tr>
-      </tbody>
+      <tr>
+            <td>%MANUAL_OUTPUT_1%</td>
+          <td id="manual1State">جار التحميل...</td>
+          <td>
+            <button id="manual1Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual1Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="1" id="manual1Duration" min="0" max="300" value="4">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_2%</td>
+          <td id="manual2State">جار التحميل...</td>
+          <td>
+            <button id="manual2Btn" class="button">تشغيل</button>
+            </td>
+             <td>
+            <span id="manual2Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="2" id="manual2Duration" min="0" max="300" value="4">
+          </td>
+        </tr>
+        <!-- تكرار نفس الهيكل للمخارج من 3 إلى 10 -->
+        <tr>
+          <td>%MANUAL_OUTPUT_3%</td>
+          <td id="manual3State">جار التحميل...</td>
+          <td>
+            <button id="manual3Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual3Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="3" id="manual3Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_4%</td>
+          <td id="manual4State">جار التحميل...</td>
+          <td>
+            <button id="manual4Btn" class="button">تشغيل</button>
+            </td>
+             <td>
+            <span id="manual4Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="4" id="manual4Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_5%</td>
+          <td id="manual5State">جار التحميل...</td>
+          <td>
+            <button id="manual5Btn" class="button">تشغيل</button>
+            </td>
+             <td>
+            <span id="manual5Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="5" id="manual5Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_6%</td>
+          <td id="manual6State">جار التحميل...</td>
+          <td>
+            <button id="manual6Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual6Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="6" id="manual6Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_7%</td>
+          <td id="manual7State">جار التحميل...</td>
+          <td>
+            <button id="manual7Btn" class="button">تشغيل</button>
+            </td>
+             <td>
+            <span id="manual7Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="7" id="manual7Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_8%</td>
+          <td id="manual8State">جار التحميل...</td>
+          <td>
+            <button id="manual8Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual8Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="8" id="manual8Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_9%</td>
+          <td id="manual9State">جار التحميل...</td>
+          <td>
+            <button id="manual9Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual9Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="9" id="manual9Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        <tr>
+          <td>%MANUAL_OUTPUT_10%</td>
+          <td id="manual10State">جار التحميل...</td>
+          <td>
+            <button id="manual10Btn" class="button">تشغيل</button>
+             </td>
+             <td>
+            <span id="manual10Remaining" class="timer"></span>
+          </td>
+          <td class="duration-control">
+            <input type="number" class="duration-input" data-pin="10" id="manual10Duration" min="0" max="300" value="0">
+          </td>
+        </tr>
+        </tbody>
     </table>
   </div>
+
 </body>
 </html>
