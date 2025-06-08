@@ -193,6 +193,33 @@ graph TD
 - `main.js` - منطق واجهة التحكم
 - ملفات CSS في مجلد `/css/`
 
+data/
+  ├── index.html
+  ├── config.html
+  |-- network.html
+  |-- upload.html
+  ├── css/
+  │    ├── base.css
+  │    ├── config.css
+  │    ├── upload.css
+  │    ├── config.css
+  │    ├── network.css
+  │    ├── index.css
+  │    ├── all.min.css
+  │    ├── cairo.css
+  │    └── tajawal.css
+  ├── js/
+  │    ├── main.js
+  │    └── config.js
+  ├── fonts/
+  │    ├── Cairo-SemiBold.woff2
+  │    └── Tajawal-Regular.woff2
+  └── webfonts/
+       ├── fa-solid-900.woff2
+       ├── fa-v4compatibility.woff2
+       ├── fa-regular-400.woff2
+       └── fa-brands-400.woff2
+
 ## 💡 نصائح الاستخدام
 - استخدم الإعدادات المسبقة لملفات التوقيت الشائعة
 - تفعيل الوضع الليلي لتقليل إجهاد العين
