@@ -193,16 +193,16 @@ graph TD
 - `main.js` - منطق واجهة التحكم
 - ملفات CSS في مجلد `/css/`
 
+```plaintext
 data/
   ├── index.html
   ├── config.html
-  |-- network.html
-  |-- upload.html
+  ├── network.html
+  ├── upload.html
   ├── css/
   │    ├── base.css
   │    ├── config.css
   │    ├── upload.css
-  │    ├── config.css
   │    ├── network.css
   │    ├── index.css
   │    ├── all.min.css
@@ -219,6 +219,7 @@ data/
        ├── fa-v4compatibility.woff2
        ├── fa-regular-400.woff2
        └── fa-brands-400.woff2
+```
 
 ## 💡 نصائح الاستخدام
 - استخدم الإعدادات المسبقة لملفات التوقيت الشائعة
